@@ -2,13 +2,12 @@
   <div class="header">
     <h1>Рабочее место сотрудника</h1>
   </div>
-
   <div class="nav">
     <button :class="{ active: activeTab === 'workplace' }" @click="activeTab = 'workplace'">
       Рабочее место
     </button>
     <button :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">
-      Моя история
+      История операций
     </button>
   </div>
 
@@ -16,35 +15,34 @@
   <div v-if="activeTab === 'workplace'" class="tab active">
     <div class="card">
       <h3>Поиск клиента</h3>
-
       <div class="search-box">
         <input
           v-model="searchQuery"
-          placeholder="Номер карты (123456) или телефон (9123456789)"
+          placeholder="Номер карты (DTLC-XXXXXX) или телефон (+7...)"
         />
         <button @click="searchClient" :disabled="loading">Найти</button>
       </div>
-
       <button @click="scanQR" class="btn-scan">Сканировать QR-код</button>
 
       <div v-if="client" class="client-result">
         <h4>{{ client.name }}</h4>
         <p>Баллы: {{ client.points }} (уровень: {{ client.level }})</p>
 
-        <!-- Начисление -->
+        <!-- Начисление баллов -->
         <div class="form-group">
           <input
             v-model.number="purchaseAmount"
             type="number"
             placeholder="Сумма покупки"
             min="1"
+            max="4999"
           />
           <button @click="addPoints" :disabled="loading || !purchaseAmount">
-            {{ loading ? 'Обработка...' : 'Начислить' }}
+            {{ loading ? 'Обработка...' : 'Начислить баллы' }}
           </button>
         </div>
 
-        <!-- Подарки -->
+        <!-- Выдача подарка -->
         <div class="form-group">
           <select v-model="selectedGift">
             <option value="">Выберите подарок</option>
@@ -62,10 +60,10 @@
     </div>
   </div>
 
-  <!-- История сотрудника -->
+  <!-- История операций -->
   <div v-if="activeTab === 'history'" class="tab active">
     <div class="card">
-      <h3>Моя история операций</h3>
+      <h3>История операций</h3>
       <div v-if="myTransactions.length === 0" class="empty">Нет операций</div>
       <div v-for="t in myTransactions" :key="t.id" class="transaction-item">
         <div :class="t.points_change > 0 ? 'points-positive' : 'points-negative'">
@@ -96,17 +94,28 @@ const myTransactions = ref([])
 const loading = ref(false)
 const errorMessage = ref('')
 
-// Формат даты
+const getInitData = () => {
+  return window.Telegram?.WebApp?.initData || ''
+}
+
 const formatDateTime = (isoStr) => {
   return new Date(isoStr).toLocaleString('ru-RU')
 }
 
-// Загрузка подарков и истории
+// Загрузка данных при монтировании
 onMounted(async () => {
   try {
     const [giftsRes, historyRes] = await Promise.all([
-      fetch(`${window.API_BASE}/api/client/gifts`),
-      fetch(`${window.API_BASE}/api/staff/my-transactions?staff_id=${props.staffId}`)
+      fetch(`${window.API_BASE}/api/client/gifts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      }),
+      fetch(`${window.API_BASE}/api/staff/my-transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      })
     ])
     gifts.value = await giftsRes.json()
     myTransactions.value = await historyRes.json()
@@ -121,15 +130,18 @@ const searchClient = async () => {
   const q = searchQuery.value.trim()
   if (!q) return
 
-  let url
-  if (/^[\d+\s\-\(\)]+$/.test(q)) {
-    url = `${window.API_BASE}/api/staff/client-by-phone?phone=${encodeURIComponent(q)}`
-  } else {
-    url = `${window.API_BASE}/api/staff/client-by-card?card_number=${encodeURIComponent(q)}`
-  }
-
   try {
-    const res = await fetch(url)
+    const payload = { initData: getInitData(), [q.match(/^\d+$/) ? 'phone' : 'card_number']: q }
+    const url = q.match(/^\d+$/) 
+      ? `${window.API_BASE}/api/staff/client-by-phone`
+      : `${window.API_BASE}/api/staff/client-by-card`
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+
     client.value = res.ok ? await res.json() : null
     if (!client.value) {
       errorMessage.value = "Клиент не найден"
@@ -145,7 +157,6 @@ const scanQR = () => {
     errorMessage.value = "Сканирование доступно только в Telegram"
     return
   }
-
   window.Telegram.WebApp.scanQrPopup(
     { text: "Отсканируйте QR-код карты клиента" },
     (data) => {
@@ -170,18 +181,32 @@ const addPoints = async () => {
 
   loading.value = true
   try {
-    const url = `${window.API_BASE}/api/staff/add-points?client_id=${client.value.id}&staff_id=${props.staffId}&purchase_amount=${purchaseAmount.value}`
-    const res = await fetch(url, { method: 'POST' })
+    const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        initData: getInitData(),
+        client_id: client.value.id,
+        purchase_amount: purchaseAmount.value
+      })
+    })
+
     if (res.ok) {
       await searchClient()
       purchaseAmount.value = 0
       // Обновить историю
-      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions?staff_id=${props.staffId}`)
+      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      })
       myTransactions.value = await histRes.json()
     } else {
       const err = await res.json()
       errorMessage.value = err.detail || "Ошибка начисления"
     }
+  } catch (e) {
+    errorMessage.value = "Ошибка подключения"
   } finally {
     loading.value = false
   }
@@ -190,24 +215,37 @@ const addPoints = async () => {
 // Выдача подарка
 const redeemGift = async () => {
   if (!client.value || !selectedGift.value) return
-
   const gift = gifts.value.find(g => g.id == selectedGift.value)
   if (!confirm(`Выдать "${gift?.name}" клиенту ${client.value.name}?`)) return
 
   loading.value = true
   try {
-    const url = `${window.API_BASE}/api/staff/redeem-gift?client_id=${client.value.id}&staff_id=${props.staffId}&gift_id=${selectedGift.value}`
-    const res = await fetch(url, { method: 'POST' })
+    const res = await fetch(`${window.API_BASE}/api/staff/redeem-gift`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        initData: getInitData(),
+        client_id: client.value.id,
+        gift_id: selectedGift.value
+      })
+    })
+
     if (res.ok) {
       await searchClient()
       selectedGift.value = ''
       // Обновить историю
-      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions?staff_id=${props.staffId}`)
+      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      })
       myTransactions.value = await histRes.json()
     } else {
       const err = await res.json()
       errorMessage.value = err.detail || "Ошибка выдачи"
     }
+  } catch (e) {
+    errorMessage.value = "Ошибка подключения"
   } finally {
     loading.value = false
   }
@@ -220,7 +258,6 @@ const redeemGift = async () => {
   text-align: center;
   margin: 16px 0;
 }
-
 .nav {
   display: flex;
   gap: 8px;
@@ -243,7 +280,6 @@ const redeemGift = async () => {
   color: white;
   border-color: #0d6efd;
 }
-
 .card {
   background: #111;
   border-radius: 12px;
@@ -252,7 +288,6 @@ const redeemGift = async () => {
   color: white;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
-
 .search-box {
   display: flex;
   gap: 8px;
@@ -269,7 +304,6 @@ const redeemGift = async () => {
   color: white;
   font-size: 14px;
 }
-
 .btn-scan {
   background: #198754;
   color: white;
@@ -285,14 +319,12 @@ const redeemGift = async () => {
 .btn-scan:hover {
   background: #157347;
 }
-
 .client-result {
   background: #222;
   padding: 16px;
   border-radius: 8px;
   margin-top: 16px;
 }
-
 .form-group {
   display: flex;
   gap: 10px;
@@ -321,7 +353,6 @@ const redeemGift = async () => {
   background: #444;
   cursor: not-allowed;
 }
-
 .error-message {
   background: #5a1818;
   color: #ffcccc;
@@ -330,8 +361,6 @@ const redeemGift = async () => {
   margin-top: 12px;
   border: 1px solid #8b2626;
 }
-
-/* История */
 .transaction-item {
   padding: 12px 0;
   border-bottom: 1px solid #333;

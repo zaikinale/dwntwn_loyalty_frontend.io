@@ -6,7 +6,7 @@
 
   <!-- Регистрация для клиентов -->
   <RegisterForm v-else-if="userRole === 'client' && !isRegistered" @registered="loadProfile" />
-  
+
   <!-- Основной интерфейс -->
   <div v-else>
     <div class="header">
@@ -29,20 +29,14 @@
     <!-- Сотрудник -->
     <StaffView v-else-if="userRole === 'staff'" :staff-id="staffId" />
 
-    <!-- Админка -->
+    <!-- Админ -->
     <AdminView v-else-if="userRole === 'admin'" :staff-id="staffId" />
 
     <!-- Навигация (только для клиента) -->
     <div class="nav" v-if="userRole === 'client'">
-      <button :class="{ active: activeTab === 'card' }" @click="activeTab = 'card'">
-        Карта
-      </button>
-      <button :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">
-        История
-      </button>
-      <button :class="{ active: activeTab === 'info' }" @click="activeTab = 'info'">
-        Инфо
-      </button>
+      <button :class="{ active: activeTab === 'card' }" @click="activeTab = 'card'">Карта</button>
+      <button :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">История</button>
+      <button :class="{ active: activeTab === 'info' }" @click="activeTab = 'info'">Инфо</button>
     </div>
   </div>
 </template>
@@ -64,21 +58,30 @@ const gifts = ref([])
 const staffId = ref(null)
 const activeTab = ref('card')
 
-const getTelegramUser = () => {
-  if (window.Telegram?.WebApp?.initDataUnsafe?.user) {
-    return window.Telegram.WebApp.initDataUnsafe.user
+const getInitData = () => {
+  if (window.Telegram?.WebApp?.initData) {
+    return window.Telegram.WebApp.initData
   }
-  return { id: 123456789, first_name: "Тест" }
+  // Для локальной разработки (удалить в продакшене!)
+  return "query_id=AAHdF5IQAAAAAN0XkhDp&user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%2C%22last_name%22%3A%22User%22%2C%22username%22%3A%22testuser%22%2C%22language_code%22%3A%22ru%22%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1710000000&hash=abc123def456"
 }
 
 const loadProfile = async () => {
   try {
-    const tgUser = getTelegramUser()
-    const res = await fetch(`${window.API_BASE}/api/client/profile?telegram_id=${tgUser.id}`)
+    const res = await fetch(`${window.API_BASE}/api/client/profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: getInitData() })
+    })
     if (res.ok) {
       profile.value = await res.json()
       isRegistered.value = true
-      const giftsRes = await fetch(`${window.API_BASE}/api/client/gifts`)
+
+      const giftsRes = await fetch(`${window.API_BASE}/api/client/gifts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      })
       gifts.value = await giftsRes.json()
     } else {
       isRegistered.value = false
@@ -91,8 +94,11 @@ const loadProfile = async () => {
 
 const authorizeStaff = async () => {
   try {
-    const tgUser = getTelegramUser()
-    const res = await fetch(`${window.API_BASE}/api/staff/login?telegram_id=${tgUser.id}`)
+    const res = await fetch(`${window.API_BASE}/api/staff/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: getInitData() })
+    })
     if (res.ok) {
       const staff = await res.json()
       userRole.value = staff.role
@@ -118,7 +124,6 @@ onMounted(() => {
   text-align: center;
   margin: 16px 0;
 }
-
 .nav {
   display: flex;
   gap: 8px;
@@ -141,7 +146,6 @@ onMounted(() => {
   color: white;
   border-color: #0d6efd;
 }
-
 .card {
   background: #111;
   border-radius: 12px;

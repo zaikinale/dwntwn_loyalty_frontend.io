@@ -1,7 +1,6 @@
 <template>
   <div class="card">
-    <h3>Ваша карта DwnTwn Loyalty</h3>
-    
+    <h3>Моя карта DwnTwn Loyalty</h3>
     <!-- QR-код -->
     <div class="qr-container">
       <div class="qr-wrapper">
@@ -14,12 +13,11 @@
         <div v-else class="qr-placeholder">Загрузка...</div>
       </div>
     </div>
-
     <!-- Информация о карте -->
     <div class="card-info">
       <div class="info-row">
-        <span class="label">Статус карты:</span>
-        <span class="value level-{{ profile.level.toLowerCase() }}">{{ profile.level }}</span>
+        <span class="label">Уровень карты:</span>
+        <span class="value" :class="`level-${profile.level.toLowerCase()}`">{{ profile.level }}</span>
       </div>
       <div class="info-row">
         <span class="label">Текущий баланс:</span>
@@ -30,7 +28,6 @@
         <span class="value">{{ profile.total_earned_points }} баллов</span>
       </div>
     </div>
-
     <p class="hint">1 балл = 1 рубль</p>
   </div>
 
@@ -72,62 +69,51 @@ const availableGifts = computed(() => {
   margin: 16px;
   color: white;
 }
-
 .qr-container {
   display: flex;
   justify-content: center;
   margin: 20px 0;
 }
-
 .qr-wrapper {
   background: white;
   padding: 20px;
   border-radius: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-
 .qr-code {
   display: block;
   width: 180px;
   height: 180px;
-  background: white;
 }
-
 .card-info {
   margin: 20px 0;
   padding: 16px;
   background: #222;
   border-radius: 12px;
 }
-
 .info-row {
   display: flex;
   justify-content: space-between;
   margin: 8px 0;
   font-size: 16px;
 }
-
 .label {
   color: #aaa;
 }
-
 .value {
   font-weight: 600;
   color: white;
 }
-
 .level-bronze { color: #cd7f32; }
 .level-silver { color: #c0c0c0; }
 .level-gold { color: #ffd700; }
 .level-platina { color: #e5e4e2; }
-
 .hint {
   text-align: center;
   font-size: 14px;
   color: #777;
   margin-top: 16px;
 }
-
 .gift-item {
   display: flex;
   justify-content: space-between;
@@ -138,20 +124,17 @@ const availableGifts = computed(() => {
 .gift-item:last-child {
   border-bottom: none;
 }
-
 .gift-content {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-
 .gift-image {
   width: 32px;
   height: 32px;
   object-fit: cover;
   border-radius: 4px;
 }
-
 .empty {
   text-align: center;
   color: #777;

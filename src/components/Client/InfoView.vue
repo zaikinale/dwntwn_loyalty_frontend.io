@@ -1,6 +1,6 @@
 <template>
   <div class="card">
-    <h3>Наши кофейни</h3>
+    <h3>Адреса кофеен</h3>
     <div class="locations">
       <a
         href="https://yandex.ru/maps/-/CLRijYmL"
@@ -8,7 +8,7 @@
         rel="noopener noreferrer"
         class="location-link"
       >
-        ул. Казанская 25
+        ул. Разанская, 25
       </a>
       <a
         href="https://yandex.ru/maps/-/CLRifK3C"
@@ -16,16 +16,8 @@
         rel="noopener noreferrer"
         class="location-link"
       >
-        ул. Малая Морская 18
+        ул. Калашная, 18
       </a>
-      <!-- <a
-        href="https://yandex.ru/maps/?text=наб.%20Реки,%207"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="location-link"
-      >
-        наб. Реки, 7
-      </a> -->
     </div>
   </div>
 
@@ -40,16 +32,6 @@
       Напишите нам в Telegram!<br>
       @dwntwn_coffee_support_bot
     </a>
-    <!-- или  -->
-    <!-- <a
-      href="tel:+79950909787"
-      target="_blank"
-      rel="noopener noreferrer"
-      class="support-link"
-    >
-      Позвоните нам! 
-      +7(995)090-97-87
-    </a> -->
   </div>
 
   <div class="card">
@@ -75,11 +57,6 @@
 </template>
 
 <style scoped>
-.card h3 {
-  margin-bottom: 10px;
-  color: white;
-}
-
 .card {
   background: #111;
   border-radius: 12px;
@@ -87,7 +64,10 @@
   margin-bottom: 20px;
   color: white;
 }
-
+.card h3 {
+  margin-bottom: 10px;
+  color: white;
+}
 .location-link,
 .social-link,
 .support-link {
@@ -97,20 +77,17 @@
   margin-bottom: 8px;
   line-height: 1.4;
 }
-
 .location-link:last-child,
 .social-link:last-child,
 .support-link:last-child {
   margin-bottom: 0;
 }
-
 .location-link:hover,
 .social-link:hover,
 .support-link:hover {
   color: #1a8cff;
   text-decoration: underline;
 }
-
 .rules-text {
   line-height: 1.6;
   font-size: 14px;

@@ -1,9 +1,8 @@
 <template>
   <div class="card">
     <div style="background:#222; padding:16px; border-radius:8px; margin:20px 0; font-size:14px;">
-      Для использования полного функционала бота необходимо зарегистрироваться
+      Для использования полного функционала необходимо зарегистрироваться
     </div>
-
     <div class="form-group">
       <label>Фамилия</label>
       <input v-model="form.lastName" placeholder="Иванович" />
@@ -32,9 +31,8 @@
       <label>Email</label>
       <input v-model="form.email" type="email" placeholder="example@mail.ru" />
     </div>
-
     <button @click="submit" class="btn" :disabled="!isValid">
-      РЕГИСТРАЦИЯ
+      ЗАРЕГИСТРИРОВАТЬСЯ
     </button>
   </div>
 </template>
@@ -57,26 +55,33 @@ const isValid = computed(() => {
   return form.value.lastName && form.value.firstName
 })
 
+const getInitData = () => {
+  return window.Telegram?.WebApp?.initData || ""
+}
+
 const submit = async () => {
   try {
-    const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || { id: 123456789 }
+    const payload = {
+      initData: getInitData(),
+      first_name: form.value.firstName,
+      last_name: form.value.lastName,
+      phone: form.value.phone || null,
+      email: form.value.email || null,
+      birth_date: form.value.birthDate || null,
+      gender: form.value.gender || null
+    }
+
     const res = await fetch(`${window.API_BASE}/api/client/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        telegram_id: tgUser.id,
-        first_name: form.value.firstName,
-        last_name: form.value.lastName,
-        phone: form.value.phone || null,
-        email: form.value.email || null, 
-        birth_date: form.value.birthDate || null,
-        gender: form.value.gender || null
-      })
+      body: JSON.stringify(payload)
     })
+
     if (res.ok) {
       emit('registered')
     } else {
-      alert("Ошибка регистрации")
+      const err = await res.json()
+      alert("Ошибка регистрации: " + (err.detail || "Неизвестная ошибка"))
     }
   } catch (e) {
     alert("Ошибка подключения")
