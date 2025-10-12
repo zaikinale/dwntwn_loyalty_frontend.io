@@ -1,3 +1,4 @@
+<!-- src/App.vue -->
 <template>
   <div v-if="!userRole" class="card">
     <div class="header"><h1>DwnTwn Loyalty</h1></div>
@@ -59,11 +60,7 @@ const staffId = ref(null)
 const activeTab = ref('card')
 
 const getInitData = () => {
-  if (window.Telegram?.WebApp?.initData) {
-    return window.Telegram.WebApp.initData
-  }
-  // Для локальной разработки (удалить в продакшене!)
-  return "query_id=AAHdF5IQAAAAAN0XkhDp&user=%7B%22id%22%3A123456789%2C%22first_name%22%3A%22Test%22%2C%22last_name%22%3A%22User%22%2C%22username%22%3A%22testuser%22%2C%22language_code%22%3A%22ru%22%2C%22allows_write_to_pm%22%3Atrue%7D&auth_date=1710000000&hash=abc123def456"
+  return window.Telegram?.WebApp?.initData || ""
 }
 
 const loadProfile = async () => {
@@ -77,12 +74,30 @@ const loadProfile = async () => {
       profile.value = await res.json()
       isRegistered.value = true
 
+      // Загружаем подарки
       const giftsRes = await fetch(`${window.API_BASE}/api/client/gifts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ initData: getInitData() })
       })
       gifts.value = await giftsRes.json()
+
+      // 🔔 Загружаем персональные уведомления (НОВОЕ)
+      const notifRes = await fetch(`${window.API_BASE}/api/client/user-notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      })
+      if (notifRes.ok) {
+        const notifications = await notifRes.json()
+        const unread = notifications.filter(n => !n.is_read)
+        if (unread.length > 0) {
+          // Показываем первое непрочитанное уведомление
+          const first = unread[0]
+          alert(`🔔 ${first.title}\n\n${first.message}`)
+          // Опционально: пометить как прочитанное (если реализовано на бэке)
+        }
+      }
     } else {
       isRegistered.value = false
     }

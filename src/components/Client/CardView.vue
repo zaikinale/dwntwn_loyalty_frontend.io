@@ -1,4 +1,8 @@
+<!-- src/components/Client/CardView.vue -->
 <template>
+  <div v-if="isAnniversary" class="anniversary-banner">
+    🎉 Сегодня ваша годовщина в программе лояльности!
+  </div>
   <div class="card">
     <h3>Моя карта DwnTwn Loyalty</h3>
     <!-- QR-код -->
@@ -28,7 +32,7 @@
         <span class="value">{{ profile.total_earned_points }} баллов</span>
       </div>
     </div>
-    <p class="hint">1 балл = 1 рубль</p>
+    <!-- <p class="hint">1 балл = 1 рубль</p> -->
   </div>
 
   <!-- Подарки -->
