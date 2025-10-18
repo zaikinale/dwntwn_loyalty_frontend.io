@@ -8,7 +8,7 @@
         rel="noopener noreferrer"
         class="location-link"
       >
-        ул. Разанская, 25
+        ул. Казанская, 25
       </a>
       <a
         href="https://yandex.ru/maps/-/CLRifK3C"
@@ -16,7 +16,7 @@
         rel="noopener noreferrer"
         class="location-link"
       >
-        ул. Калашная, 18
+        ул. Малая Морская, 18
       </a>
     </div>
   </div>
