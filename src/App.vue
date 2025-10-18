@@ -74,7 +74,6 @@ const loadProfile = async () => {
       profile.value = await res.json()
       isRegistered.value = true
 
-      // Загружаем подарки
       const giftsRes = await fetch(`${window.API_BASE}/api/client/gifts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -82,7 +81,6 @@ const loadProfile = async () => {
       })
       gifts.value = await giftsRes.json()
 
-      // 🔔 Загружаем персональные уведомления (НОВОЕ)
       const notifRes = await fetch(`${window.API_BASE}/api/client/user-notifications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,10 +90,8 @@ const loadProfile = async () => {
         const notifications = await notifRes.json()
         const unread = notifications.filter(n => !n.is_read)
         if (unread.length > 0) {
-          // Показываем первое непрочитанное уведомление
           const first = unread[0]
           alert(`🔔 ${first.title}\n\n${first.message}`)
-          // Опционально: пометить как прочитанное (если реализовано на бэке)
         }
       }
     } else {
@@ -129,6 +125,11 @@ const authorizeStaff = async () => {
 }
 
 onMounted(() => {
+  const tg = window.Telegram?.WebApp
+  if (tg) {
+    tg.expand() // ✅ Разрешить прокрутку
+    tg.ready()  // ✅ Разрешить взаимодействие с клавиатурой
+  }
   authorizeStaff()
 })
 </script>
