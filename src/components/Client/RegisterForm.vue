@@ -64,6 +64,7 @@ const submit = async () => {
   if (!initData) {
     alert("Ошибка: нет данных от Telegram. Откройте приложение через бота!");
     return;
+  }
   
   try {
     const payload = {
