@@ -143,7 +143,6 @@ onMounted(() => {
 .nav {
   display: flex;
   gap: 8px;
-  margin: 16px 0;
   justify-content: center;
   flex-wrap: wrap;
 }
