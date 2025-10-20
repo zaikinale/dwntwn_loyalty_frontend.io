@@ -117,10 +117,20 @@ onMounted(async () => {
         body: JSON.stringify({ initData: getInitData() })
       })
     ])
+
     gifts.value = await giftsRes.json()
-    myTransactions.value = await historyRes.json()
+
+    if (historyRes.ok) {
+      myTransactions.value = await historyRes.json()
+    } else {
+      // Эндпоинт не существует или вернул ошибку → пустой массив
+      myTransactions.value = []
+      console.warn("Не удалось загрузить историю операций:", await historyRes.text())
+    }
   } catch (e) {
     errorMessage.value = "Ошибка загрузки данных"
+    myTransactions.value = []
+    console.error("Исключение при загрузке данных:", e)
   }
 })
 
@@ -287,6 +297,9 @@ const redeemGift = async () => {
   margin: 16px;
   color: white;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.card > h3 {
+  margin-bottom: 10px;
 }
 .search-box {
   display: flex;
