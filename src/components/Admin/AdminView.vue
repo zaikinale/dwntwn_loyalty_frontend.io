@@ -312,19 +312,22 @@ const searchClient = async () => {
 
 const scanQR = () => {
   clearError()
-  if (!window.Telegram?.WebApp?.scanQrPopup) {
-    errorMessage.value = "Сканирование доступно только в Telegram"
+  const WebApp = window.Telegram?.WebApp
+  if (!WebApp || typeof WebApp.scanQrCode !== 'function') {
+    errorMessage.value = "Сканирование QR-кода доступно только в Telegram-приложении на iOS/Android"
     return
   }
-  window.Telegram.WebApp.scanQrPopup(
-    { text: "Отсканируйте QR-код карты клиента" },
-    (data) => {
+
+  WebApp.scanQrCode()
+    .then((data) => {
       if (data) {
         searchQuery.value = data.trim()
         searchClient()
       }
-    }
-  )
+    })
+    .catch(() => {
+      errorMessage.value = "Не удалось отсканировать QR-код"
+    })
 }
 
 const addPoints = async () => {
