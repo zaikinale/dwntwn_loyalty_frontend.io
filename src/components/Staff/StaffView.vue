@@ -104,6 +104,12 @@ const formatDateTime = (isoStr) => {
 
 // Загрузка данных при монтировании
 onMounted(async () => {
+  const WebApp = window.Telegram?.WebApp;
+  const scanAvailable = typeof WebApp?.scanQrCode === 'function';
+  
+  console.log("WebApp version:", WebApp?.version);
+  console.log("Platform:", WebApp?.platform);
+  console.log("scanQrCode available:", scanAvailable);
   try {
     const [giftsRes, historyRes] = await Promise.all([
       fetch(`${window.API_BASE}/api/client/gifts`, {
