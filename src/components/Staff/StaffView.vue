@@ -104,12 +104,12 @@ const formatDateTime = (isoStr) => {
 
 // Загрузка данных при монтировании
 onMounted(async () => {
-  const WebApp = window.Telegram?.WebApp;
-  const scanAvailable = typeof WebApp?.scanQrCode === 'function';
+  // const WebApp = window.Telegram?.WebApp;
+  // const scanAvailable = typeof WebApp?.scanQrCode === 'function';
   
-  console.log("WebApp version:", WebApp?.version);
-  console.log("Platform:", WebApp?.platform);
-  console.log("scanQrCode available:", scanAvailable);
+  // console.log("WebApp version:", WebApp?.version);
+  // console.log("Platform:", WebApp?.platform);
+  // console.log("scanQrCode available:", scanAvailable);
   try {
     const [giftsRes, historyRes] = await Promise.all([
       fetch(`${window.API_BASE}/api/client/gifts`, {
@@ -169,18 +169,15 @@ const searchClient = async () => {
 
 // Сканирование QR — ИСПРАВЛЕНО
 const scanQR = () => {
-  if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
-    Telegram.WebApp.scanQrCode().then(data => {
+  const WebApp = window.Telegram?.WebApp;
+  if (WebApp && typeof WebApp.scanQrCode === 'function') {
+    WebApp.scanQrCode().then(data => {
       if (data) {
-        alert("Отсканировано: " + data);
+        alert("Успех! Отсканировано: " + data);
       }
-    }).catch(err => {
-      alert("Ошибка сканирования");
     });
   } else {
-    alert("scanQrCode недоступен\n" +
-          "WebApp: " + !!Telegram?.WebApp + "\n" +
-          "Метод: " + typeof Telegram?.WebApp?.scanQrCode);
+    alert("Платформа: " + WebApp?.platform + "\nМетод: " + (typeof WebApp?.scanQrCode));
   }
 };
 
