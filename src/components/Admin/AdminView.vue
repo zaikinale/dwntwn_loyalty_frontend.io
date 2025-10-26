@@ -311,24 +311,20 @@ const searchClient = async () => {
 }
 
 const scanQR = () => {
-  clearError()
-  const WebApp = window.Telegram?.WebApp
-  if (!WebApp || typeof WebApp.scanQrCode !== 'function') {
-    errorMessage.value = "Сканирование QR-кода доступно только в Telegram-приложении на iOS/Android"
-    return
-  }
-
-  WebApp.scanQrCode()
-    .then((data) => {
+  if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
+    Telegram.WebApp.scanQrCode().then(data => {
       if (data) {
-        searchQuery.value = data.trim()
-        searchClient()
+        alert("Отсканировано: " + data);
       }
-    })
-    .catch(() => {
-      errorMessage.value = "Не удалось отсканировать QR-код"
-    })
-}
+    }).catch(err => {
+      alert("Ошибка сканирования");
+    });
+  } else {
+    alert("scanQrCode недоступен\n" +
+          "WebApp: " + !!Telegram?.WebApp + "\n" +
+          "Метод: " + typeof Telegram?.WebApp?.scanQrCode);
+  }
+};
 
 const addPoints = async () => {
   clearError()
