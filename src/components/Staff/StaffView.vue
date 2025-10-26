@@ -177,7 +177,7 @@ const scanQR = () => {
       }
     });
   } else {
-    alert("Платформа: " + WebApp?.platform + "\nМетод: " + (typeof WebApp?.scanQrCode));
+    alert("Платформа: " + WebApp?.platform + "\nМетод: " + (typeof WebApp?.scanQrCode) + "\nДомен: " + window.location.origin);
   }
 };
 
