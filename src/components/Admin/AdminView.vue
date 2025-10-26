@@ -15,6 +15,9 @@
   <div v-if="activeTab === 'staff-mode'" class="tab active">
     <div class="card">
       <h3>Рабочее место сотрудника</h3>
+      <div style="position:fixed; bottom:10px; left:10px; background:red; color:white; padding:4px; font-size:10px;">
+        {{ window?.location?.origin }}
+      </div>
       <div class="search-box">
         <input 
           v-model="searchQuery" 
