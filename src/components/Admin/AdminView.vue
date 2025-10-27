@@ -339,7 +339,6 @@ onMounted(async () => {
     errorMessage.value = "Ошибка загрузки данных"
   }
 })
-
 const loadCurrentNotifications = async () => {
   try {
     const res = await fetch(`${window.API_BASE}/api/admin/all-notifications`, {
@@ -347,6 +346,9 @@ const loadCurrentNotifications = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ initData: getInitData() })
     })
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${await res.text()}`)
+    }
     const data = await res.json()
     currentNotifications.value = {
       announcement: data.find(n => n.type === 'announcement') || null,
@@ -354,6 +356,7 @@ const loadCurrentNotifications = async () => {
       promotion: data.filter(n => n.type === 'promotion')
     }
   } catch (e) {
+    errorMessage.value = "Ошибка загрузки уведомлений: " + (e.message || e)
     console.error("Ошибка загрузки уведомлений:", e)
   }
 }
