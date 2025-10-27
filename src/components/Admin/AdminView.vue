@@ -99,33 +99,81 @@
   </div>
 
   <!-- Уведомления -->
-  <div v-if="activeTab === 'notifications'" class="tab active">
-    <div class="card">
-      <h3>Новое уведомление</h3>
-      <div class="form-group">
-        <select v-model="newNotification.type">
-          <option value="promotion">Акция</option>
-          <option value="novelty">Новинка</option>
-          <option value="announcement">Объявление</option>
-        </select>
+<div v-if="activeTab === 'notifications'" class="tab active">
+  <!-- Форма добавления -->
+  <div class="card">
+    <h3>Добавить уведомление</h3>
+    <div class="form-group">
+      <select v-model="newNotification.type">
+        <option value="promotion">Акция</option>
+        <option value="novelty">Новинка</option>
+        <option value="announcement">Объявление</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <input v-model="newNotification.title" placeholder="Заголовок" />
+    </div>
+    <div class="form-group">
+      <textarea v-model="newNotification.description" placeholder="Описание" rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <input v-model="newNotification.image_url" placeholder="Ссылка на фото (необязательно)" />
+    </div>
+    <div class="form-group">
+      <input v-model.number="newNotification.days" type="number" placeholder="Дней действия" min="1" />
+    </div>
+    <button @click="addNotification" class="btn" :disabled="loading">
+      {{ loading ? 'Создание...' : 'Добавить уведомление' }}
+    </button>
+  </div>
+
+  <!-- Текущие уведомления -->
+  <div class="card">
+    <h3>Текущие уведомления</h3>
+
+    <!-- Объявление -->
+    <div class="notification-section">
+      <h4>📢 Объявление</h4>
+      <div v-if="currentNotifications.announcement" class="notification-item">
+        <div class="notification-content">
+          <h5>{{ currentNotifications.announcement.title }}</h5>
+          <p>{{ currentNotifications.announcement.description }}</p>
+          <small>Истекает: {{ formatDateTime(currentNotifications.announcement.expires_at) }}</small>
+        </div>
+        <button @click="deleteNotification(currentNotifications.announcement.id)" class="btn-delete">Удалить</button>
       </div>
-      <div class="form-group">
-        <input v-model="newNotification.title" placeholder="Заголовок" />
+      <div v-else class="empty">Нет активного объявления</div>
+    </div>
+
+    <!-- Новинки -->
+    <div class="notification-section">
+      <h4>🆕 Новинки</h4>
+      <div v-for="n in currentNotifications.novelty" :key="n.id" class="notification-item">
+        <div class="notification-content">
+          <h5>{{ n.title }}</h5>
+          <p>{{ n.description }}</p>
+          <small>Истекает: {{ formatDateTime(n.expires_at) }}</small>
+        </div>
+        <button @click="deleteNotification(n.id)" class="btn-delete">Удалить</button>
       </div>
-      <div class="form-group">
-        <textarea v-model="newNotification.description" placeholder="Описание" rows="3"></textarea>
+      <div v-if="currentNotifications.novelty.length === 0" class="empty">Нет новинок</div>
+    </div>
+
+    <!-- Акции -->
+    <div class="notification-section">
+      <h4>🎁 Акции</h4>
+      <div v-for="n in currentNotifications.promotion" :key="n.id" class="notification-item">
+        <div class="notification-content">
+          <h5>{{ n.title }}</h5>
+          <p>{{ n.description }}</p>
+          <small>Истекает: {{ formatDateTime(n.expires_at) }}</small>
+        </div>
+        <button @click="deleteNotification(n.id)" class="btn-delete">Удалить</button>
       </div>
-      <div class="form-group">
-        <input v-model="newNotification.image_url" placeholder="Ссылка на фото (необязательно)" />
-      </div>
-      <div class="form-group">
-        <input v-model.number="newNotification.days" type="number" placeholder="Дней действия" min="1" />
-      </div>
-      <button @click="addNotification" class="btn" :disabled="loading">
-        {{ loading ? 'Создание...' : 'Добавить уведомление' }}
-      </button>
+      <div v-if="currentNotifications.promotion.length === 0" class="empty">Нет акций</div>
     </div>
   </div>
+</div>
 
   <!-- Подарки -->
   <div v-if="activeTab === 'gifts'" class="tab active">
@@ -238,6 +286,8 @@ const auditLogs = ref([])
 const client = ref(null)
 const giftsForRedeem = ref([])
 
+const currentNotifications = ref({ announcement: null, novelty: [], promotion: [] })
+
 const broadcast = ref({ title: '', message: '', link: '' })
 const broadcastResult = ref(null)
 
@@ -261,6 +311,9 @@ const switchTab = (tab) => {
   if (tab === 'broadcast') {
     broadcast.value = { title: '', message: '', link: '' }
     broadcastResult.value = null
+  }
+  if (tab === 'notifications') {
+    loadCurrentNotifications()
   }
 }
 
@@ -286,6 +339,46 @@ onMounted(async () => {
     errorMessage.value = "Ошибка загрузки данных"
   }
 })
+
+const loadCurrentNotifications = async () => {
+  try {
+    const res = await fetch(`${window.API_BASE}/api/admin/all-notifications`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: getInitData() })
+    })
+    const data = await res.json()
+    currentNotifications.value = {
+      announcement: data.find(n => n.type === 'announcement') || null,
+      novelty: data.filter(n => n.type === 'novelty'),
+      promotion: data.filter(n => n.type === 'promotion')
+    }
+  } catch (e) {
+    console.error("Ошибка загрузки уведомлений:", e)
+  }
+}
+
+const deleteNotification = async (id) => {
+  if (!confirm("Удалить уведомление? Это действие нельзя отменить.")) return
+  try {
+    const res = await fetch(`${window.API_BASE}/api/admin/delete-notification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: getInitData(), notification_id: id })
+    })
+    if (res.ok) {
+      // Обновляем список
+      await loadCurrentNotifications()
+      // Обновляем аудит
+      loadAuditLogs()
+    } else {
+      const err = await res.json()
+      errorMessage.value = err.detail || "Не удалось удалить"
+    }
+  } catch (e) {
+    errorMessage.value = "Ошибка подключения"
+  }
+}
 
 const loadGiftsForRedeem = async () => {
   const res = await fetch(`${window.API_BASE}/api/client/gifts`, {
@@ -838,5 +931,50 @@ const sendBroadcast = async () => {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+}
+.notification-section {
+  margin: 16px 0;
+  padding: 12px 0;
+  border-top: 1px solid #333;
+}
+.notification-section h4 {
+  margin: 12px 0 8px;
+  color: #0d6efd;
+}
+.notification-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid #333;
+}
+.notification-content {
+  flex: 1;
+  margin-right: 12px;
+}
+.notification-content h5 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.notification-content p {
+  margin: 0 0 8px;
+  color: #ccc;
+  font-size: 14px;
+}
+.empty {
+  text-align: center;
+  color: #777;
+  padding: 12px 0;
+  font-style: italic;
+}
+.btn-delete {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  align-self: center;
 }
 </style>
