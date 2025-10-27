@@ -7,6 +7,7 @@
     <button :class="{ active: activeTab === 'gifts' }" @click="switchTab('gifts')">Подарки</button>
     <button :class="{ active: activeTab === 'history' }" @click="switchTab('history')">История</button>
     <button :class="{ active: activeTab === 'audit' }" @click="switchTab('audit')">Аудит</button>
+    <button :class="{ active: activeTab === 'broadcast' }" @click="switchTab('broadcast')">Пуш-рассылка</button>
   </div>
 
   <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -187,6 +188,29 @@
       </div>
     </div>
   </div>
+
+  <!-- Пуш-рассылка -->
+<div v-if="activeTab === 'broadcast'" class="tab active">
+  <div class="card">
+    <h3>Пуш-рассылка всем клиентам</h3>
+    <div class="form-group">
+      <input v-model="broadcast.title" placeholder="Заголовок рассылки" />
+    </div>
+    <div class="form-group">
+      <textarea v-model="broadcast.message" placeholder="Текст сообщения" rows="4"></textarea>
+    </div>
+    <div class="form-group">
+      <input v-model="broadcast.link" placeholder="Ссылка (необязательно)" />
+    </div>
+    <button @click="sendBroadcast" :disabled="loading || !broadcast.title.trim() || !broadcast.message.trim()" class="btn">
+      {{ loading ? 'Отправка...' : 'Отправить рассылку' }}
+    </button>
+    <div v-if="broadcastResult" class="broadcast-result">
+      <p>✅ Отправлено: {{ broadcastResult.sent_to }} из {{ broadcastResult.total }}</p>
+      <p v-if="broadcastResult.failed">❌ Не доставлено: {{ broadcastResult.failed }}</p>
+    </div>
+  </div>
+</div>
 </template>
 
 <script setup>
