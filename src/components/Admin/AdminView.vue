@@ -238,6 +238,9 @@ const auditLogs = ref([])
 const client = ref(null)
 const giftsForRedeem = ref([])
 
+const broadcast = ref({ title: '', message: '', link: '' })
+const broadcastResult = ref(null)
+
 const getInitData = () => {
   return window.Telegram?.WebApp?.initData || ''
 }
@@ -255,6 +258,10 @@ const switchTab = (tab) => {
   clearError()
   if (tab === 'audit') loadAuditLogs()
   if (tab === 'staff') loadStaffAndClients()
+  if (tab === 'broadcast') {
+    broadcast.value = { title: '', message: '', link: '' }
+    broadcastResult.value = null
+  }
 }
 
 onMounted(async () => {
@@ -589,6 +596,35 @@ const loadAuditLogs = async () => {
     }
   } catch (e) {
     console.error("Ошибка загрузки аудита:", e)
+  }
+}
+
+const sendBroadcast = async () => {
+  clearError()
+  loading.value = true
+  try {
+    const res = await fetch(`${window.API_BASE}/api/admin/broadcast`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        initData: getInitData(),
+        title: broadcast.value.title,
+        message: broadcast.value.message,
+        link: broadcast.value.link
+      })
+    })
+    if (res.ok) {
+      broadcastResult.value = await res.json()
+      // Опционально: сбросить форму
+      // broadcast.value = { title: '', message: '', link: '' }
+    } else {
+      const err = await res.json()
+      errorMessage.value = err.detail || "Ошибка отправки рассылки"
+    }
+  } catch (e) {
+    errorMessage.value = "Ошибка подключения"
+  } finally {
+    loading.value = false
   }
 }
 </script>
