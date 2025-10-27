@@ -23,6 +23,9 @@
       <div v-show="activeTab === 'card'" class="tab active">
         <CardView :profile="profile" :gifts="gifts" />
       </div>
+      <div v-show="activeTab === 'news'" class="tab active">
+        <NewsView />
+      </div>
       <div v-show="activeTab === 'history'" class="tab active">
         <HistoryView :transactions="transactions" />
       </div>
@@ -40,6 +43,7 @@
     <!-- Навигация (только для клиента) -->
     <div class="nav" v-if="userRole === 'client'">
       <button :class="{ active: activeTab === 'card' }" @click="activeTab = 'card'">Карта</button>
+      <button :class="{ active: activeTab === 'news' }" @click="activeTab = 'news'">Новости</button>
       <button :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">История</button>
       <button :class="{ active: activeTab === 'info' }" @click="activeTab = 'info'">Инфо</button>
     </div>
@@ -50,6 +54,7 @@
 import { ref, onMounted } from 'vue'
 import RegisterForm from './components/Client/RegisterForm.vue'
 import CardView from './components/Client/CardView.vue'
+import NewsView from './components/Client/NewsView.vue'
 import HistoryView from './components/Client/HistoryView.vue'
 import InfoView from './components/Client/InfoView.vue'
 import StaffView from './components/Staff/StaffView.vue'
