@@ -1,6 +1,12 @@
 <template>
-    <div class="news-page">
-      <!-- 1. ОБЪЯВЛЕНИЕ (только одно, всегда сверху) -->
+  <div class="news-page">
+    <!-- Сообщение, если ничего нет -->
+    <div v-if="!announcement && novelties.length === 0 && promotions.length === 0" class="empty-news">
+      Новостей пока что нет, но они обязательно скоро появятся!
+    </div>
+
+    <!-- 1. ОБЪЯВЛЕНИЕ -->
+    <div v-else>
       <div v-if="announcement" class="announcement">
         <img v-if="announcement.image_url" :src="announcement.image_url" alt="Объявление" />
         <div class="announcement-content">
@@ -8,10 +14,17 @@
           <p>{{ announcement.description }}</p>
         </div>
       </div>
-  
-      <!-- 2. НОВИНКИ (слайдер с автопрокруткой) -->
+
+      <!-- 2. НОВИНКИ -->
       <div v-if="novelties.length > 0" class="novelties-slider">
-        <div class="slider-container" ref="sliderContainer">
+        <div 
+          class="slider-container" 
+          @touchstart="handleTouchStart"
+          @touchend="handleTouchEnd"
+          @mousedown="handleMouseDown"
+          @mouseup="handleMouseUp"
+          @mouseleave="handleMouseLeave"
+        >
           <div
             v-for="(item, index) in novelties"
             :key="item.id"
@@ -34,8 +47,8 @@
           ></span>
         </div>
       </div>
-  
-      <!-- 3. АКЦИИ (мини-карточки) -->
+
+      <!-- 3. АКЦИИ -->
       <div v-if="promotions.length > 0" class="promotions">
         <h2>Акции</h2>
         <div class="promotions-grid">
@@ -52,23 +65,24 @@
           </div>
         </div>
       </div>
-  
-      <!-- Модальное окно для деталей акции -->
-      <div v-if="selectedPromo" class="modal-overlay" @click="closePromoDetail">
-        <div class="modal-content" @click.stop>
-          <button class="modal-close" @click="closePromoDetail">×</button>
-          <div class="modal-body">
-            <div class="modal-image" v-if="selectedPromo.image_url">
-              <img :src="selectedPromo.image_url" :alt="selectedPromo.title" />
-            </div>
-            <div class="modal-text">
-              <h2>{{ selectedPromo.title }}</h2>
-              <p>{{ selectedPromo.description }}</p>
-            </div>
+    </div>
+
+    <!-- Модальное окно -->
+    <div v-if="selectedPromo" class="modal-overlay" @click="closePromoDetail">
+      <div class="modal-content" @click.stop>
+        <button class="modal-close" @click="closePromoDetail">×</button>
+        <div class="modal-body">
+          <div class="modal-image" v-if="selectedPromo.image_url">
+            <img :src="selectedPromo.image_url" :alt="selectedPromo.title" />
+          </div>
+          <div class="modal-text">
+            <h2>{{ selectedPromo.title }}</h2>
+            <p>{{ selectedPromo.description }}</p>
           </div>
         </div>
       </div>
     </div>
+  </div>
 </template>
 
 <script setup>
@@ -99,6 +113,52 @@ const loadNotifications = async () => {
   }
 }
 
+// === СВАЙП ДЛЯ СЛАЙДЕРА ===
+let touchStartX = 0
+let mouseStartX = 0
+let isDragging = false
+
+const handleTouchStart = (e) => {
+  touchStartX = e.touches[0].clientX
+  clearInterval(sliderInterval)
+}
+
+const handleTouchEnd = (e) => {
+  const touchEndX = e.changedTouches[0].clientX
+  const diff = touchStartX - touchEndX
+
+  if (Math.abs(diff) > 50) {
+    if (diff > 0) {
+      goToSlide(currentIndex.value + 1)
+    } else {
+      goToSlide(currentIndex.value - 1)
+    }
+  } else {
+    startAutoSlide()
+  }
+}
+
+const handleMouseDown = (e) => {
+  mouseStartX = e.clientX
+  isDragging = true
+  clearInterval(sliderInterval)
+}
+
+const handleMouseUp = () => {
+  if (isDragging) {
+    isDragging = false
+    startAutoSlide()
+  }
+}
+
+const handleMouseLeave = () => {
+  if (isDragging) {
+    isDragging = false
+    startAutoSlide()
+  }
+}
+
+
 // Автопрокрутка слайдера
 const startAutoSlide = () => {
   sliderInterval = setInterval(() => {
@@ -106,7 +166,15 @@ const startAutoSlide = () => {
   }, 5000) // каждые 5 секунд
 }
 
+// Обновите goToSlide, чтобы он поддерживал циклическую навигацию
 const goToSlide = (index) => {
+  const total = novelties.value.length
+  if (total === 0) return
+
+  // Циклическая навигация
+  if (index < 0) index = total - 1
+  if (index >= total) index = 0
+
   currentIndex.value = index
   clearInterval(sliderInterval)
   startAutoSlide()
@@ -315,6 +383,17 @@ onUnmounted(() => {
 .modal-text h2 {
   margin-bottom: 12px;
   font-size: 18px;
+}
+
+.empty-news {
+  text-align: center;
+  padding: 40px 20px;
+  color: #aaa;
+  font-size: 18px;
+  font-style: italic;
+  background: #1a1a1a;
+  border-radius: 12px;
+  margin-top: 16px;
 }
 
 </style>
