@@ -274,7 +274,7 @@ const redeemGift = async () => {
 .nav {
   display: flex;
   gap: 8px;
-  margin: 16px 0;
+  margin-top: 16px;
   justify-content: center;
   flex-wrap: wrap;
 }
