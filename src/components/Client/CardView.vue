@@ -3,9 +3,10 @@
   <div v-if="isAnniversary" class="anniversary-banner">
     🎉 Сегодня ваша годовщина в программе лояльности!
   </div>
+
+  <!-- Карта -->
   <div class="card">
     <h3>Ваша карта</h3>
-    <!-- QR-код -->
     <div class="qr-container">
       <div class="qr-wrapper">
         <qrcode-vue
@@ -17,7 +18,6 @@
         <div v-else class="qr-placeholder">Загрузка...</div>
       </div>
     </div>
-    <!-- Информация о карте -->
     <div class="card-info">
       <div class="info-row">
         <span class="label">Уровень карты:</span>
@@ -32,7 +32,6 @@
         <span class="value">{{ profile.total_earned_points }} баллов</span>
       </div>
     </div>
-    <!-- <p class="hint">1 балл = 1 рубль</p> -->
   </div>
 
   <!-- Подарки -->
@@ -49,6 +48,21 @@
       <span>{{ gift.points_cost }} баллов</span>
     </div>
   </div>
+
+  <!-- История операций -->
+  <div class="card">
+    <h3>История операций</h3>
+    <div v-if="transactions.length === 0" class="empty">Нет операций</div>
+    <div v-else>
+      <div v-for="t in transactions" :key="t.id" class="transaction-item">
+        <div :class="t.points_change > 0 ? 'points-positive' : 'points-negative'">
+          {{ t.points_change > 0 ? '+' : '' }}{{ t.points_change }}
+        </div>
+        <div>{{ t.description }}</div>
+        <div class="timestamp">{{ formatDateTime(t.created_at) }}</div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -57,20 +71,31 @@ import QrcodeVue from 'qrcode.vue'
 
 const props = defineProps({
   profile: { type: Object, required: true },
-  gifts: { type: Array, required: true }
+  gifts: { type: Array, required: true },
+  transactions: { type: Array, required: true } // ← добавлено
 })
 
 const availableGifts = computed(() => {
   return props.gifts.filter(gift => gift.points_cost <= props.profile.points)
 })
+
+const formatDateTime = (isoStr) => {
+  return new Date(isoStr).toLocaleString('ru-RU')
+}
 </script>
 
 <style scoped>
+/* ... ваш текущий CSS без изменений ... */
 .card {
   background: #111;
   border-radius: 12px;
   padding: 20px;
   margin: 16px;
+  color: white;
+}
+.card h3 {
+  margin-top: 0;
+  margin-bottom: 16px;
   color: white;
 }
 .qr-container {
@@ -112,12 +137,6 @@ const availableGifts = computed(() => {
 .level-silver { color: #c0c0c0; }
 .level-gold { color: #ffd700; }
 .level-platina { color: #e5e4e2; }
-.hint {
-  text-align: center;
-  font-size: 14px;
-  color: #777;
-  margin-top: 16px;
-}
 .gift-item {
   display: flex;
   justify-content: space-between;
@@ -139,9 +158,23 @@ const availableGifts = computed(() => {
   object-fit: cover;
   border-radius: 4px;
 }
+.transaction-item {
+  padding: 12px 0;
+  border-bottom: 1px solid #333;
+}
+.transaction-item:last-child {
+  border-bottom: none;
+}
+.points-positive { color: #4CAF50; }
+.points-negative { color: #f44336; }
+.timestamp {
+  font-size: 12px;
+  color: #aaa;
+}
 .empty {
   text-align: center;
   color: #777;
   padding: 20px 0;
+  font-style: italic;
 }
 </style>

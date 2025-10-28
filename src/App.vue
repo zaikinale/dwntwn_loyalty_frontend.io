@@ -21,14 +21,14 @@
     <!-- Клиент -->
     <template v-if="userRole === 'client'">
       <div v-show="activeTab === 'card'" class="tab active">
-        <CardView :profile="profile" :gifts="gifts" />
+        <CardView :profile="profile" :gifts="gifts" :transactions="transactions"  />
       </div>
       <div v-show="activeTab === 'news'" class="tab active">
         <NewsView />
       </div>
-      <div v-show="activeTab === 'history'" class="tab active">
+      <!-- <div v-show="activeTab === 'history'" class="tab active">
         <HistoryView :transactions="transactions" />
-      </div>
+      </div> -->
       <div v-show="activeTab === 'info'" class="tab active">
         <InfoView />
       </div>
@@ -44,7 +44,7 @@
     <div class="nav" v-if="userRole === 'client'">
       <button :class="{ active: activeTab === 'card' }" @click="activeTab = 'card'">Карта</button>
       <button :class="{ active: activeTab === 'news' }" @click="activeTab = 'news'">Новости</button>
-      <button :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">История</button>
+      <!-- <button :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">История</button> -->
       <button :class="{ active: activeTab === 'info' }" @click="activeTab = 'info'">Инфо</button>
     </div>
   </div>
@@ -55,7 +55,7 @@ import { ref, onMounted } from 'vue'
 import RegisterForm from './components/Client/RegisterForm.vue'
 import CardView from './components/Client/CardView.vue'
 import NewsView from './components/Client/NewsView.vue'
-import HistoryView from './components/Client/HistoryView.vue'
+// import HistoryView from './components/Client/HistoryView.vue'
 import InfoView from './components/Client/InfoView.vue'
 import StaffView from './components/Staff/StaffView.vue'
 import AdminView from './components/Admin/AdminView.vue'
@@ -72,6 +72,53 @@ const getInitData = () => {
   return window.Telegram?.WebApp?.initData || ""
 }
 
+// const loadProfile = async () => {
+//   try {
+//     const res = await fetch(`${window.API_BASE}/api/client/profile`, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ initData: getInitData() })
+//     })
+//     if (res.ok) {
+//       profile.value = await res.json()
+//       isRegistered.value = true
+
+//       const giftsRes = await fetch(`${window.API_BASE}/api/client/gifts`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ initData: getInitData() })
+//       })
+//       gifts.value = await giftsRes.json()
+
+//       const txRes = await fetch(`${window.API_BASE}/api/client/transactions`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ initData: getInitData() })
+//       })
+//       transactions.value = await txRes.json()
+
+//       const notifRes = await fetch(`${window.API_BASE}/api/client/user-notifications`, {
+//         method: 'POST',
+//         headers: { 'Content-Type': 'application/json' },
+//         body: JSON.stringify({ initData: getInitData() })
+//       })
+//       if (notifRes.ok) {
+//         const notifications = await notifRes.json()
+//         const unread = notifications.filter(n => !n.is_read)
+//         if (unread.length > 0) {
+//           const first = unread[0]
+//           alert(`🔔 ${first.title}\n\n${first.message}`)
+//         }
+//       }
+//     } else {
+//       isRegistered.value = false
+//     }
+//   } catch (e) {
+//     console.error(e)
+//     isRegistered.value = false
+//   }
+// }
+
 const loadProfile = async () => {
   try {
     const res = await fetch(`${window.API_BASE}/api/client/profile`, {
@@ -83,6 +130,7 @@ const loadProfile = async () => {
       profile.value = await res.json()
       isRegistered.value = true
 
+      // Загрузка подарков
       const giftsRes = await fetch(`${window.API_BASE}/api/client/gifts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -90,6 +138,15 @@ const loadProfile = async () => {
       })
       gifts.value = await giftsRes.json()
 
+      // Загрузка истории операций ← НОВОЕ
+      const txRes = await fetch(`${window.API_BASE}/api/client/transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      })
+      transactions.value = await txRes.json()
+
+      // Загрузка уведомлений
       const notifRes = await fetch(`${window.API_BASE}/api/client/user-notifications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
