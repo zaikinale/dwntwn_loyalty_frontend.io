@@ -72,7 +72,7 @@
       </button>
 
       <!-- Контейнер для html5-qrcode (обязательно должен существовать в DOM) -->
-      <div id="qr-reader" v-show="isScanning && (!window.Telegram || !window.Telegram.WebApp)"></div>
+      <div id="qr-reader" style="display: none;"></div>
 
       <div v-if="client" class="client-result">
         <h4>{{ client.name }}</h4>
@@ -534,6 +534,7 @@ const scanQR = async () => {
     const { Html5QrcodeScanner } = await import('html5-qrcode')
 
     const container = document.getElementById('qr-reader')
+    container.style.display = 'block'
     if (!container) {
       throw new Error('Контейнер #qr-reader не найден в DOM')
     }
@@ -572,6 +573,10 @@ const stopHtml5QrScanner = () => {
   if (qrScanner.value) {
     qrScanner.value.clear()
     qrScanner.value = null
+  }
+  const container = document.getElementById('qr-reader')
+  if (container) {
+    container.style.display = 'none'
   }
   isScanning.value = false
 }
