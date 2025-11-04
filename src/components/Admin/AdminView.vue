@@ -56,7 +56,7 @@
     </div>
   </div> -->
     <!-- Рабочее место -->
-  <div v-if="activeTab === 'staff-mode'" class="tab active">
+  <div v-if="activeTab === 'staff-mode'" class="tab active">  
     <div class="card">
       <h3>Рабочее место сотрудника</h3>
       <div class="search-box">
@@ -66,30 +66,19 @@
         />
         <button @click="searchClient" :disabled="loading">Найти</button>
       </div>
-
+    
       <button @click="scanQR" class="btn-scan">
         {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR-код клиента' }}
       </button>
 
-    <!-- Видеопоток для сканирования (только вне Telegram) -->
-      <div v-if="isScanning && (!window.Telegram || !window.Telegram.WebApp)" 
-          style="position: relative; margin: 16px 0; text-align: center;">
-        <video
-          ref="videoRef"
-          style="width: 100%; max-width: 400px; height: auto; background: black; display: block; margin: 0 auto; border-radius: 8px;"
-          playsinline
-          autoplay
-          muted
-        ></video>
-        <div style="color: #aaa; margin-top: 8px; font-size: 14px;">
-          Наведите камеру на QR-код
-        </div>
-      </div>
+      <!-- Контейнер для html5-qrcode (создаётся динамически) -->
+      <div id="qr-reader" v-show="isScanning && (!window.Telegram || !window.Telegram.WebApp)" 
+           style="margin: 16px 0; max-width: 400px; margin-left: auto; margin-right: auto;"></div>
 
       <div v-if="client" class="client-result">
         <h4>{{ client.name }}</h4>
         <p>Баллы: {{ client.points }} ({{ client.level }})</p>
-      <!-- Начисление -->
+        <!-- Начисление -->
         <div class="form-group">
           <input 
             v-model.number="purchaseAmount" 
@@ -99,10 +88,10 @@
             max="4999"
           />
           <button @click="addPoints" :disabled="loading || !purchaseAmount">
-          {{ loading ? 'Обработка...' : 'Начислить' }}
+            {{ loading ? 'Обработка...' : 'Начислить' }}
           </button>
         </div>
-      <!-- Подарок -->
+        <!-- Подарок -->
         <div class="form-group">
           <select v-model="selectedGift">
             <option value="">Выберите подарок</option>
@@ -324,11 +313,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onBeforeUnmount, onMounted } from 'vue'
 
 const isScanning = ref(false)
-const videoRef = ref(null) // ссылка на <video>
-let codeReader = null
+const qrScanner = ref(null) // будет содержать экземпляр сканера
+// let codeReader = null
 
 const props = defineProps({
   staffId: { type: Number, required: true }
@@ -521,7 +510,7 @@ const searchClient = async () => {
 const scanQR = async () => {
   clearError()
 
-  // Проверяем, запущено ли в Telegram
+  // Сначала пробуем Telegram (приоритет!)
   if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
     try {
       const data = await Telegram.WebApp.scanQrCode()
@@ -530,14 +519,14 @@ const scanQR = async () => {
         await searchClient()
       }
     } catch (err) {
-      errorMessage.value = "Не удалось отсканировать QR-код"
+      errorMessage.value = "Ошибка сканирования в Telegram"
     }
     return
   }
 
-  // Если не в Telegram — запускаем собственный сканер
+  // Если не в Telegram — запускаем html5-qrcode
   if (isScanning.value) {
-    stopScanning()
+    stopHtml5QrScanner()
     return
   }
 
@@ -545,49 +534,64 @@ const scanQR = async () => {
   errorMessage.value = ''
 
   try {
-    // Импортируем динамически, чтобы не тянуть библиотеку всегда
-    const { BrowserQRCodeReader } = await import('@zxing/browser')
-    codeReader = new BrowserQRCodeReader()
+    const { Html5QrcodeScanner } = await import('html5-qrcode')
 
-    const videoInputDevices = await BrowserQRCodeReader.listVideoInputDevices()
-    if (videoInputDevices.length === 0) {
-      throw new Error('Камера не найдена')
+    // Создаём контейнер для сканера, если его нет
+    let container = document.getElementById('qr-reader')
+    if (!container) {
+      container = document.createElement('div')
+      container.id = 'qr-reader'
+      container.style.margin = '16px 0'
+      container.style.maxWidth = '400px'
+      container.style.marginLeft = 'auto'
+      container.style.marginRight = 'auto'
+      document.querySelector('.card').appendChild(container)
     }
 
-    // Используем основную камеру (обычно заднюю на телефоне)
-    const deviceId = videoInputDevices[0].deviceId
+    const config = {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      supportedScanTypes: ['SCAN_TYPE_CAMERA'], // только камера
+      rememberLastUsedCamera: true,
+      formatsToSupport: ['QR_CODE']
+    }
 
-    // Начинаем сканирование
-    codeReader.decodeFromVideoDevice(
-      deviceId,
-      videoRef.value,
-      (result, error) => {
-        if (result) {
-          stopScanning()
-          searchQuery.value = result.getText().trim()
-          searchClient()
-        }
+    const onScanSuccess = (decodedText) => {
+      stopHtml5QrScanner()
+      searchQuery.value = decodedText.trim()
+      searchClient()
+    }
 
-        if (error && !(error instanceof ZXing.NotFoundException)) {
-          console.error('Ошибка сканирования:', error)
-          // Не останавливаем сканирование при "не найдено"
-        }
+    const onScanFailure = (error) => {
+      // Игнорируем "не найдено" — это нормально
+      if (!error?.includes('NotFoundException')) {
+        console.warn('QR scan error:', error)
       }
-    )
+    }
+
+    qrScanner.value = new Html5QrcodeScanner('qr-reader', config, false)
+    qrScanner.value.render(onScanSuccess, onScanFailure)
   } catch (err) {
     console.error('Не удалось запустить сканер:', err)
-    errorMessage.value = 'Камера недоступна. Разрешите доступ и убедитесь, что сайт открыт по HTTPS.'
-    stopScanning()
+    errorMessage.value = 'Камера недоступна. Убедитесь, что сайт открыт по HTTPS.'
+    isScanning.value = false
   }
 }
 
-const stopScanning = () => {
-  if (codeReader) {
-    codeReader.reset()
-    codeReader = null
+const stopHtml5QrScanner = () => {
+  if (qrScanner.value) {
+    qrScanner.value.clear()
+    qrScanner.value = null
   }
+  const container = document.getElementById('qr-reader')
+  if (container) container.remove()
   isScanning.value = false
 }
+
+// Очищаем сканер при уходе с компонента
+onBeforeUnmount(() => {
+  stopHtml5QrScanner()
+})
 
 const addPoints = async () => {
   clearError()
