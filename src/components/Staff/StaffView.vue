@@ -26,7 +26,7 @@
         {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR-код' }}
       </button>
 
-      <!-- Контейнер для резервного сканера (только вне Telegram) -->
+      <!-- Контейнер для html5-qrcode (ТОЧЬ-В-ТОЧЬ как в админке) -->
       <div id="qr-reader" style="display: none;"></div>
 
       <div v-if="client" class="client-result">
@@ -99,8 +99,7 @@ const myTransactions = ref([])
 const loading = ref(false)
 const errorMessage = ref('')
 const isScanning = ref(false)
-
-let html5QrCode = null
+const qrScanner = ref(null)
 
 const getInitData = () => {
   return window.Telegram?.WebApp?.initData || ''
@@ -160,10 +159,11 @@ const searchClient = async () => {
   }
 }
 
-// 🔸 ГИБРИДНЫЙ СКАНЕР — ТОЧЬ-В-ТОЧЬ КАК В АДМИНКЕ
+// 🔸 СКАНИРОВАНИЕ — ТОЧЬ-В-ТОЧЬ КАК В АДМИНКЕ
 const scanQR = async () => {
-  clearError()
+  errorMessage.value = ''
 
+  // Telegram — приоритет
   if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
     try {
       const data = await Telegram.WebApp.scanQrCode()
@@ -177,13 +177,13 @@ const scanQR = async () => {
     return
   }
 
+  // Резервный сканер
   if (isScanning.value) {
     stopHtml5QrScanner()
     return
   }
 
   isScanning.value = true
-  errorMessage.value = ''
 
   try {
     const { Html5QrcodeScanner } = await import('html5-qrcode')
@@ -194,13 +194,12 @@ const scanQR = async () => {
     }
     container.style.display = 'block'
 
-    // ⚠️ НЕ указываем supportedScanTypes — пусть библиотека решает сама
     const config = {
       fps: 10,
       qrbox: { width: 250, height: 250 },
       rememberLastUsedCamera: true,
       useBarCodeDetectorIfSupported: false,
-      formatsToSupport: ['QR_CODE'] // можно оставить, если нужно
+      formatsToSupport: ['QR_CODE']
     }
 
     const onScanSuccess = (decodedText) => {
@@ -217,7 +216,6 @@ const scanQR = async () => {
 
     qrScanner.value = new Html5QrcodeScanner('qr-reader', config, false)
     qrScanner.value.render(onScanSuccess, onScanFailure)
-
   } catch (err) {
     console.error('Ошибка запуска сканера:', err)
     const msg = err?.message || (typeof err === 'string' ? err : 'неизвестная ошибка')
@@ -227,6 +225,7 @@ const scanQR = async () => {
     if (container) container.style.display = 'none'
   }
 }
+
 const stopHtml5QrScanner = () => {
   if (qrScanner.value) {
     qrScanner.value.clear()
@@ -243,51 +242,50 @@ onBeforeUnmount(() => {
   stopHtml5QrScanner()
 })
 
-// Начисление баллов
-  const addPoints = async () => {
-    if (!client.value || !purchaseAmount.value || purchaseAmount.value <= 0) {
-      errorMessage.value = "Укажите сумму покупки"
-      return
-    }
-    if (purchaseAmount.value > 4999) {
-      errorMessage.value = "Максимум 4999 руб."
-      return
-    }
+// ——— ОСТАЛЬНЫЕ ФУНКЦИИ БЕЗ ИЗМЕНЕНИЙ ———
 
-    loading.value = true
-    try {
-      const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          initData: getInitData(),
-          client_id: client.value.id,
-          purchase_amount: purchaseAmount.value
-        })
-      })
-
-      if (res.ok) {
-        await searchClient()
-        purchaseAmount.value = 0
-        // Обновить историю
-        const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData: getInitData() })
-        })
-        myTransactions.value = await histRes.json()
-      } else {
-        const err = await res.json()
-        errorMessage.value = err.detail || "Ошибка начисления"
-      }
-    } catch (e) {
-      errorMessage.value = "Ошибка подключения"
-    } finally {
-      loading.value = false
-    }
+const addPoints = async () => {
+  if (!client.value || !purchaseAmount.value || purchaseAmount.value <= 0) {
+    errorMessage.value = "Укажите сумму покупки"
+    return
+  }
+  if (purchaseAmount.value > 4999) {
+    errorMessage.value = "Максимум 4999 руб."
+    return
   }
 
-// Выдача подарка
+  loading.value = true
+  try {
+    const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        initData: getInitData(),
+        client_id: client.value.id,
+        purchase_amount: purchaseAmount.value
+      })
+    })
+
+    if (res.ok) {
+      await searchClient()
+      purchaseAmount.value = 0
+      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      })
+      myTransactions.value = await histRes.json()
+    } else {
+      const err = await res.json()
+      errorMessage.value = err.detail || "Ошибка начисления"
+    }
+  } catch (e) {
+    errorMessage.value = "Ошибка подключения"
+  } finally {
+    loading.value = false
+  }
+}
+
 const redeemGift = async () => {
   if (!client.value || !selectedGift.value) return
   const gift = gifts.value.find(g => g.id == selectedGift.value)
@@ -308,7 +306,6 @@ const redeemGift = async () => {
     if (res.ok) {
       await searchClient()
       selectedGift.value = ''
-      // Обновить историю
       const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -328,6 +325,7 @@ const redeemGift = async () => {
 </script>
 
 <style scoped>
+/* ... ваш существующий CSS без изменений ... */
 .header h1 {
   color: white;
   text-align: center;
