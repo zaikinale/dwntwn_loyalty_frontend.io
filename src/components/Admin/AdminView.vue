@@ -542,7 +542,7 @@ const scanQR = async () => {
     const config = {
       fps: 10,
       qrbox: { width: 250, height: 250 },
-      supportedScanTypes: ['SCAN_TYPE_CAMERA'],
+      // supportedScanTypes: ['SCAN_TYPE_CAMERA'],
       rememberLastUsedCamera: true,
       formatsToSupport: ['QR_CODE']
     }
