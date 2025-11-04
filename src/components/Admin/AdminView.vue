@@ -534,17 +534,18 @@ const scanQR = async () => {
     const { Html5QrcodeScanner } = await import('html5-qrcode')
 
     const container = document.getElementById('qr-reader')
-    container.style.display = 'block'
     if (!container) {
       throw new Error('Контейнер #qr-reader не найден в DOM')
     }
+    container.style.display = 'block'
 
+    // ⚠️ НЕ указываем supportedScanTypes — пусть библиотека решает сама
     const config = {
       fps: 10,
       qrbox: { width: 250, height: 250 },
-      // supportedScanTypes: ['SCAN_TYPE_CAMERA'],
       rememberLastUsedCamera: true,
-      formatsToSupport: ['QR_CODE']
+      useBarCodeDetectorIfSupported: false,
+      formatsToSupport: ['QR_CODE'] // можно оставить, если нужно
     }
 
     const onScanSuccess = (decodedText) => {
@@ -554,7 +555,6 @@ const scanQR = async () => {
     }
 
     const onScanFailure = (error) => {
-      // Игнорируем "не найдено"
       if (!error?.includes('NotFoundException')) {
         console.warn('QR scan error:', error)
       }
@@ -562,13 +562,16 @@ const scanQR = async () => {
 
     qrScanner.value = new Html5QrcodeScanner('qr-reader', config, false)
     qrScanner.value.render(onScanSuccess, onScanFailure)
+
   } catch (err) {
     console.error('Ошибка запуска сканера:', err)
-    errorMessage.value = 'Не удалось запустить сканер: ' + (err.message || 'неизвестная ошибка')
+    const msg = err?.message || (typeof err === 'string' ? err : 'неизвестная ошибка')
+    errorMessage.value = 'Не удалось запустить сканер: ' + msg
     isScanning.value = false
+    const container = document.getElementById('qr-reader')
+    if (container) container.style.display = 'none'
   }
 }
-
 const stopHtml5QrScanner = () => {
   if (qrScanner.value) {
     qrScanner.value.clear()
