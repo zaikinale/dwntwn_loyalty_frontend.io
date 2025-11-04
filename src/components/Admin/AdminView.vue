@@ -13,7 +13,7 @@
   <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
   <!-- Рабочее место -->
-  <div v-if="activeTab === 'staff-mode'" class="tab active">
+  <!-- <div v-if="activeTab === 'staff-mode'" class="tab active">
     <div class="card">
       <h3>Рабочее место сотрудника</h3>
       <div class="search-box">
@@ -26,8 +26,8 @@
       <button @click="scanQR" class="btn-scan">Сканировать QR-код клиента</button>
       <div v-if="client" class="client-result">
         <h4>{{ client.name }}</h4>
-        <p>Баллы: {{ client.points }} ({{ client.level }})</p>
-        <!-- Начисление -->
+        <p>Баллы: {{ client.points }} ({{ client.level }})</p> 
+
         <div class="form-group">
           <input 
             v-model.number="purchaseAmount" 
@@ -39,8 +39,70 @@
           <button @click="addPoints" :disabled="loading || !purchaseAmount">
             {{ loading ? 'Обработка...' : 'Начислить' }}
           </button>
+        </div> 
+
+        <div class="form-group">
+          <select v-model="selectedGift">
+            <option value="">Выберите подарок</option>
+            <option v-for="g in giftsForRedeem" :key="g.id" :value="g.id">
+              {{ g.name }} ({{ g.points_cost }} баллов)
+            </option>
+          </select>
+          <button @click="redeemGift" :disabled="loading || !selectedGift">
+            {{ loading ? 'Обработка...' : 'Выдать подарок' }}
+          </button>
         </div>
-        <!-- Подарок -->
+      </div>
+    </div>
+  </div> -->
+    <!-- Рабочее место -->
+  <div v-if="activeTab === 'staff-mode'" class="tab active">
+    <div class="card">
+      <h3>Рабочее место сотрудника</h3>
+      <div class="search-box">
+        <input 
+          v-model="searchQuery" 
+          placeholder="Номер карты (DTLC-XXXXXX) / телефон (+7...)" 
+        />
+        <button @click="searchClient" :disabled="loading">Найти</button>
+      </div>
+
+      <button @click="scanQR" class="btn-scan">
+        {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR-код клиента' }}
+      </button>
+
+    <!-- Видеопоток для сканирования (только вне Telegram) -->
+      <div v-if="isScanning && (!window.Telegram || !window.Telegram.WebApp)" 
+          style="position: relative; margin: 16px 0; text-align: center;">
+        <video
+          ref="videoRef"
+          style="width: 100%; max-width: 400px; height: auto; background: black; display: block; margin: 0 auto; border-radius: 8px;"
+          playsinline
+          autoplay
+          muted
+        ></video>
+        <div style="color: #aaa; margin-top: 8px; font-size: 14px;">
+          Наведите камеру на QR-код
+        </div>
+      </div>
+
+      <div v-if="client" class="client-result">
+        <h4>{{ client.name }}</h4>
+        <p>Баллы: {{ client.points }} ({{ client.level }})</p>
+      <!-- Начисление -->
+        <div class="form-group">
+          <input 
+            v-model.number="purchaseAmount" 
+            type="number" 
+            placeholder="Сумма покупки" 
+            min="1" 
+            max="4999"
+          />
+          <button @click="addPoints" :disabled="loading || !purchaseAmount">
+          {{ loading ? 'Обработка...' : 'Начислить' }}
+          </button>
+        </div>
+      <!-- Подарок -->
         <div class="form-group">
           <select v-model="selectedGift">
             <option value="">Выберите подарок</option>
@@ -264,6 +326,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 
+const isScanning = ref(false)
+const videoRef = ref(null) // ссылка на <video>
+let codeReader = null
+
 const props = defineProps({
   staffId: { type: Number, required: true }
 })
@@ -437,21 +503,91 @@ const searchClient = async () => {
   }
 }
 
-const scanQR = () => {
+// const scanQR = () => {
+//   if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
+//     Telegram.WebApp.scanQrCode().then(data => {
+//       if (data) {
+//         alert("Отсканировано: " + data);
+//       }
+//     }).catch(err => {
+//       alert("Ошибка сканирования");
+//     });
+//   } else {
+//     alert("scanQrCode недоступен\n" +
+//           "WebApp: " + !!Telegram?.WebApp + "\n" +
+//           "Метод: " + typeof Telegram?.WebApp?.scanQrCode);
+//   }
+// };
+const scanQR = async () => {
+  clearError()
+
+  // Проверяем, запущено ли в Telegram
   if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
-    Telegram.WebApp.scanQrCode().then(data => {
+    try {
+      const data = await Telegram.WebApp.scanQrCode()
       if (data) {
-        alert("Отсканировано: " + data);
+        searchQuery.value = String(data).trim()
+        await searchClient()
       }
-    }).catch(err => {
-      alert("Ошибка сканирования");
-    });
-  } else {
-    alert("scanQrCode недоступен\n" +
-          "WebApp: " + !!Telegram?.WebApp + "\n" +
-          "Метод: " + typeof Telegram?.WebApp?.scanQrCode);
+    } catch (err) {
+      errorMessage.value = "Не удалось отсканировать QR-код"
+    }
+    return
   }
-};
+
+  // Если не в Telegram — запускаем собственный сканер
+  if (isScanning.value) {
+    stopScanning()
+    return
+  }
+
+  isScanning.value = true
+  errorMessage.value = ''
+
+  try {
+    // Импортируем динамически, чтобы не тянуть библиотеку всегда
+    const { BrowserQRCodeReader } = await import('@zxing/browser')
+    codeReader = new BrowserQRCodeReader()
+
+    const videoInputDevices = await BrowserQRCodeReader.listVideoInputDevices()
+    if (videoInputDevices.length === 0) {
+      throw new Error('Камера не найдена')
+    }
+
+    // Используем основную камеру (обычно заднюю на телефоне)
+    const deviceId = videoInputDevices[0].deviceId
+
+    // Начинаем сканирование
+    codeReader.decodeFromVideoDevice(
+      deviceId,
+      videoRef.value,
+      (result, error) => {
+        if (result) {
+          stopScanning()
+          searchQuery.value = result.getText().trim()
+          searchClient()
+        }
+
+        if (error && !(error instanceof ZXing.NotFoundException)) {
+          console.error('Ошибка сканирования:', error)
+          // Не останавливаем сканирование при "не найдено"
+        }
+      }
+    )
+  } catch (err) {
+    console.error('Не удалось запустить сканер:', err)
+    errorMessage.value = 'Камера недоступна. Разрешите доступ и убедитесь, что сайт открыт по HTTPS.'
+    stopScanning()
+  }
+}
+
+const stopScanning = () => {
+  if (codeReader) {
+    codeReader.reset()
+    codeReader = null
+  }
+  isScanning.value = false
+}
 
 const addPoints = async () => {
   clearError()
