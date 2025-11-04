@@ -22,7 +22,16 @@
         />
         <button @click="searchClient" :disabled="loading">Найти</button>
       </div>
-      <button @click="scanQR" class="btn-scan">Сканировать QR-код</button>
+      <button @click="scanQR" class="btn-scan">
+        {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR-код' }}
+      </button>
+
+      <!-- Контейнер для кастомного видеопотока (только вне Telegram) -->
+      <div
+        v-if="isScanning && (!window.Telegram || !window.Telegram.WebApp)"
+        id="qr-video-container"
+        style="position: relative; width: 100%; max-width: 400px; margin: 16px auto;"
+      ></div>
 
       <div v-if="client" class="client-result">
         <h4>{{ client.name }}</h4>
@@ -78,7 +87,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 
 const props = defineProps({
   staffId: { type: Number, required: true }
@@ -93,6 +102,9 @@ const gifts = ref([])
 const myTransactions = ref([])
 const loading = ref(false)
 const errorMessage = ref('')
+const isScanning = ref(false)
+
+let html5QrCode = null
 
 const getInitData = () => {
   return window.Telegram?.WebApp?.initData || ''
@@ -102,15 +114,8 @@ const formatDateTime = (isoStr) => {
   return new Date(isoStr).toLocaleString('ru-RU')
 }
 
-// Загрузка данных при монтировании
 onMounted(async () => {
-  window.Telegram?.WebApp?.ready();
-  // const WebApp = window.Telegram?.WebApp;
-  // const scanAvailable = typeof WebApp?.scanQrCode === 'function';
-  
-  // console.log("WebApp version:", WebApp?.version);
-  // console.log("Platform:", WebApp?.platform);
-  // console.log("scanQrCode available:", scanAvailable);
+  window.Telegram?.WebApp?.ready?.()
   try {
     const [giftsRes, historyRes] = await Promise.all([
       fetch(`${window.API_BASE}/api/client/gifts`, {
@@ -126,22 +131,13 @@ onMounted(async () => {
     ])
 
     gifts.value = await giftsRes.json()
-
-    if (historyRes.ok) {
-      myTransactions.value = await historyRes.json()
-    } else {
-      // Эндпоинт не существует или вернул ошибку → пустой массив
-      myTransactions.value = []
-      console.warn("Не удалось загрузить историю операций:", await historyRes.text())
-    }
+    myTransactions.value = historyRes.ok ? await historyRes.json() : []
   } catch (e) {
     errorMessage.value = "Ошибка загрузки данных"
-    myTransactions.value = []
-    console.error("Исключение при загрузке данных:", e)
+    console.error(e)
   }
 })
 
-// Поиск клиента
 const searchClient = async () => {
   errorMessage.value = ''
   const q = searchQuery.value.trim()
@@ -168,56 +164,87 @@ const searchClient = async () => {
   }
 }
 
-// Сканирование QR — ИСПРАВЛЕНО
-// const scanQR = () => {
-//   const WebApp = window.Telegram?.WebApp;
-//   if (WebApp && typeof WebApp.scanQrCode === 'function') {
-//     WebApp.scanQrCode().then(data => {
-//       if (data) {
-//         alert("Успех! Отсканировано: " + data);
-//       }
-//     });
-//   } else {
-//     alert("Платформа: " + WebApp?.platform + "\nМетод: " + (typeof WebApp?.scanQrCode) + "\nДомен: " + window.location.origin + "\nWebApp version: " + window.Telegram?.WebApp?.version);
-//   }
-// };
+// 🔸 ГИБРИДНЫЙ СКАНЕР — ТОЧЬ-В-ТОЧЬ КАК В АДМИНКЕ
+const scanQR = async () => {
+  errorMessage.value = ''
 
-const scanQR = () => {
-  const WebApp = window.Telegram?.WebApp;
-
-  if (!WebApp) {
-    alert("Telegram WebApp не инициализирован");
-    return;
+  // 🔸 Telegram — нативный сканер
+  if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
+    try {
+      const data = await Telegram.WebApp.scanQrCode()
+      if (data) {
+        searchQuery.value = String(data).trim()
+        await searchClient()
+      }
+    } catch (err) {
+      errorMessage.value = "Не удалось отсканировать QR-код в Telegram"
+    }
+    return
   }
 
-  // Проверяем наличие метода
-  if (typeof WebApp.openScanQrPopup === 'function') {
-    WebApp.openScanQrPopup({
-      text: "Отсканируйте QR-код клиента",
-      callback: (data) => {
-        if (data) {
-          WebApp.closeScanQrPopup();
-          alert("✅ Успех! Отсканировано: " + data);
-          // Можно сразу искать клиента:
-          searchQuery.value = data;
-          searchClient();
-        } else {
-          alert("QR-код не распознан");
-        }
+  // 🔸 Вне Telegram — остановка, если уже сканируем
+  if (isScanning.value) {
+    stopCustomScanner()
+    return
+  }
+
+  isScanning.value = true
+
+  try {
+    const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode')
+
+    const container = document.getElementById('qr-video-container')
+    if (!container) {
+      throw new Error('Контейнер #qr-video-container не найден в DOM')
+    }
+    container.innerHTML = ''
+
+    html5QrCode = new Html5Qrcode('qr-video-container')
+
+    const config = {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      useBarCodeDetectorIfSupported: false, // ← отключаем проблемный API
+      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+    }
+
+    await html5QrCode.start(
+      { facingMode: 'environment' },
+      config,
+      (decodedText) => {
+        stopCustomScanner()
+        searchQuery.value = decodedText.trim()
+        searchClient()
       },
-    });
-  } else {
-    alert(
-      "QR-сканер недоступен.\n" +
-      "Платформа: " + WebApp.platform + "\n" +
-      "Версия: " + WebApp.version + "\n\n" +
-      "Проверь, что Mini App запущен внутри Telegram (мобильный клиент ≥10.3)"
-    );
+      (errorMessageScan) => {
+        if (!errorMessageScan.includes('NotFoundException')) {
+          console.warn('QR scan warning:', errorMessageScan)
+        }
+      }
+    )
+  } catch (err) {
+    console.error('Ошибка запуска сканера:', err)
+    const msg = err?.message || (typeof err === 'string' ? err : 'неизвестная ошибка')
+    errorMessage.value = 'Не удалось запустить сканер: ' + msg
+    isScanning.value = false
   }
-};
+}
 
+const stopCustomScanner = () => {
+  if (html5QrCode) {
+    html5QrCode.stop().then(() => {
+      html5QrCode.clear()
+      html5QrCode = null
+    }).catch(console.error)
+  }
+  isScanning.value = false
+}
 
-// Начисление баллов
+onBeforeUnmount(() => {
+  stopCustomScanner()
+})
+
+// ... остальные функции (addPoints, redeemGift) — без изменений
 const addPoints = async () => {
   if (!client.value || !purchaseAmount.value || purchaseAmount.value <= 0) {
     errorMessage.value = "Укажите сумму покупки"
@@ -243,7 +270,6 @@ const addPoints = async () => {
     if (res.ok) {
       await searchClient()
       purchaseAmount.value = 0
-      // Обновить историю
       const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -261,7 +287,6 @@ const addPoints = async () => {
   }
 }
 
-// Выдача подарка
 const redeemGift = async () => {
   if (!client.value || !selectedGift.value) return
   const gift = gifts.value.find(g => g.id == selectedGift.value)
@@ -282,7 +307,6 @@ const redeemGift = async () => {
     if (res.ok) {
       await searchClient()
       selectedGift.value = ''
-      // Обновить историю
       const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -431,5 +455,24 @@ const redeemGift = async () => {
   color: #aaa;
   padding: 20px 0;
   font-style: italic;
+}
+/* Стили для видеопотока */
+#qr-video-container video {
+  width: 100%;
+  border-radius: 8px;
+  display: block;
+}
+#qr-video-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 250px;
+  height: 250px;
+  border: 2px solid #0d6efd;
+  box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  border-radius: 4px;
 }
 </style>
