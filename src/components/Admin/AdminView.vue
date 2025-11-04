@@ -288,7 +288,7 @@
   </div>
 
   <!-- Пуш-рассылка -->
-<div v-if="activeTab === 'broadcast'" class="tab active">
+  <div v-if="activeTab === 'broadcast'" class="tab active">
   <div class="card">
     <h3>Пуш-рассылка всем клиентам</h3>
     <div class="form-group">
@@ -296,6 +296,10 @@
     </div>
     <div class="form-group">
       <textarea v-model="broadcast.message" placeholder="Текст сообщения" rows="4"></textarea>
+    </div>
+    <!-- НОВОЕ ПОЛЕ: ссылка на изображение -->
+    <div class="form-group">
+      <input v-model="broadcast.image_url" placeholder="Ссылка на изображение (необязательно)" />
     </div>
     <div class="form-group">
       <input v-model="broadcast.link" placeholder="Ссылка (необязательно)" />
@@ -342,7 +346,12 @@ const giftsForRedeem = ref([])
 
 const currentNotifications = ref({ announcement: null, novelty: [], promotion: [] })
 
-const broadcast = ref({ title: '', message: '', link: '' })
+const broadcast = ref({ 
+  title: '', 
+  message: '', 
+  link: '',
+  image_url: ''
+})
 const broadcastResult = ref(null)
 
 const getInitData = () => {
@@ -834,20 +843,22 @@ const sendBroadcast = async () => {
   clearError()
   loading.value = true
   try {
+    const payload = {
+      initData: getInitData(),
+      title: broadcast.value.title,
+      message: broadcast.value.message,
+      link: broadcast.value.link,
+      image_url: broadcast.value.image_url // ← отправляем изображение
+    }
+
     const res = await fetch(`${window.API_BASE}/api/admin/broadcast`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        title: broadcast.value.title,
-        message: broadcast.value.message,
-        link: broadcast.value.link
-      })
+      body: JSON.stringify(payload)
     })
+
     if (res.ok) {
       broadcastResult.value = await res.json()
-      // Опционально: сбросить форму
-      // broadcast.value = { title: '', message: '', link: '' }
     } else {
       const err = await res.json()
       errorMessage.value = err.detail || "Ошибка отправки рассылки"
