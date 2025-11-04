@@ -73,7 +73,9 @@
         <button class="modal-close" @click="closePromoDetail">×</button>
         <div class="modal-body">
           <div class="modal-image" v-if="selectedPromo.image_url">
-            <img :src="selectedPromo.image_url" :alt="selectedPromo.title" />
+            <div class="modal-image-wrapper">
+              <img :src="selectedPromo.image_url" :alt="selectedPromo.title" />
+            </div>
           </div>
           <div class="modal-text">
             <h2>{{ selectedPromo.title }}</h2>
@@ -338,14 +340,18 @@ onUnmounted(() => {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  padding: 16px;
+  box-sizing: border-box;
 }
 .modal-content {
   background: #111;
   border-radius: 16px;
-  width: 90%;
-  max-width: 400px;
-  max-height: 80vh;
-  overflow: auto;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow: hidden; /* Важно: скрывает всё, что выходит за рамки */
+  display: flex;
+  flex-direction: column;
 }
 .modal-close {
   position: absolute;
@@ -356,28 +362,42 @@ onUnmounted(() => {
   color: white;
   font-size: 24px;
   cursor: pointer;
+  z-index: 1001;
 }
 .modal-body {
   display: flex;
   flex-direction: column;
   padding: 20px;
+  overflow: auto;
+}
+.modal-image {
+  margin-bottom: 16px;
+}
+.modal-image-wrapper {
+  width: 100%;
+  aspect-ratio: 16 / 9; /* Соотношение, можно 1/1 если квадрат */
+  background: #222;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.modal-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 @media (min-width: 500px) {
   .modal-body {
     flex-direction: row;
-    gap: 16px;
+    gap: 20px;
+    padding: 20px;
   }
   .modal-image {
+    margin-bottom: 0;
     flex: 1;
   }
-  .modal-image img {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 8px;
-  }
   .modal-text {
-    flex: 2;
+    flex: 1.5;
   }
 }
 .modal-text h2 {
