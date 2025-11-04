@@ -27,11 +27,7 @@
       </button>
 
       <!-- Контейнер для резервного сканера (только вне Telegram) -->
-      <div
-        v-if="isScanning && (!window.Telegram || !window.Telegram.WebApp)"
-        id="qr-video-container"
-        style="position: relative; width: 100%; max-width: 400px; margin: 16px auto;"
-      ></div>
+      <div id="qr-reader" style="display: none;"></div>
 
       <div v-if="client" class="client-result">
         <h4>{{ client.name }}</h4>
@@ -166,9 +162,8 @@ const searchClient = async () => {
 
 // 🔸 ГИБРИДНЫЙ СКАНЕР — ТОЧЬ-В-ТОЧЬ КАК В АДМИНКЕ
 const scanQR = async () => {
-  errorMessage.value = ''
+  clearError()
 
-  // 🔸 1. Telegram — приоритет
   if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
     try {
       const data = await Telegram.WebApp.scanQrCode()
@@ -182,66 +177,70 @@ const scanQR = async () => {
     return
   }
 
-  // 🔸 2. Вне Telegram — резервный сканер
   if (isScanning.value) {
-    stopCustomScanner()
+    stopHtml5QrScanner()
     return
   }
 
   isScanning.value = true
+  errorMessage.value = ''
 
   try {
-    const { Html5Qrcode, Html5QrcodeSupportedFormats } = await import('html5-qrcode')
+    const { Html5QrcodeScanner } = await import('html5-qrcode')
 
-    const container = document.getElementById('qr-video-container')
+    const container = document.getElementById('qr-reader')
     if (!container) {
-      throw new Error('Контейнер #qr-video-container не найден')
+      throw new Error('Контейнер #qr-reader не найден в DOM')
     }
-    container.innerHTML = ''
+    container.style.display = 'block'
 
-    html5QrCode = new Html5Qrcode('qr-video-container')
-
+    // ⚠️ НЕ указываем supportedScanTypes — пусть библиотека решает сама
     const config = {
       fps: 10,
       qrbox: { width: 250, height: 250 },
-      useBarCodeDetectorIfSupported: false, // отключаем проблемный BarcodeDetector
-      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+      rememberLastUsedCamera: true,
+      useBarCodeDetectorIfSupported: false,
+      formatsToSupport: ['QR_CODE'] // можно оставить, если нужно
     }
 
-    await html5QrCode.start(
-      { facingMode: 'environment' },
-      config,
-      (decodedText) => {
-        stopCustomScanner()
-        searchQuery.value = decodedText.trim()
-        searchClient()
-      },
-      (errMessage) => {
-        if (!errMessage.includes('NotFoundException')) {
-          console.warn('QR scan warning:', errMessage)
-        }
+    const onScanSuccess = (decodedText) => {
+      stopHtml5QrScanner()
+      searchQuery.value = decodedText.trim()
+      searchClient()
+    }
+
+    const onScanFailure = (error) => {
+      if (!error?.includes('NotFoundException')) {
+        console.warn('QR scan error:', error)
       }
-    )
+    }
+
+    qrScanner.value = new Html5QrcodeScanner('qr-reader', config, false)
+    qrScanner.value.render(onScanSuccess, onScanFailure)
+
   } catch (err) {
-    console.error('Ошибка резервного сканера:', err)
+    console.error('Ошибка запуска сканера:', err)
     const msg = err?.message || (typeof err === 'string' ? err : 'неизвестная ошибка')
     errorMessage.value = 'Не удалось запустить сканер: ' + msg
     isScanning.value = false
+    const container = document.getElementById('qr-reader')
+    if (container) container.style.display = 'none'
   }
 }
-
-const stopCustomScanner = () => {
-  if (html5QrCode) {
-    html5QrCode.stop().then(() => {
-      html5QrCode.clear()
-      html5QrCode = null
-    }).catch(console.error)
+const stopHtml5QrScanner = () => {
+  if (qrScanner.value) {
+    qrScanner.value.clear()
+    qrScanner.value = null
+  }
+  const container = document.getElementById('qr-reader')
+  if (container) {
+    container.style.display = 'none'
   }
   isScanning.value = false
 }
 
 onBeforeUnmount(() => {
-  stopCustomScanner()
+  stopHtml5QrScanner()
 })
 
 // Начисление баллов
