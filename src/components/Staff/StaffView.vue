@@ -104,6 +104,7 @@ const formatDateTime = (isoStr) => {
 
 // Загрузка данных при монтировании
 onMounted(async () => {
+  window.Telegram?.WebApp?.ready();
   // const WebApp = window.Telegram?.WebApp;
   // const scanAvailable = typeof WebApp?.scanQrCode === 'function';
   
@@ -168,18 +169,53 @@ const searchClient = async () => {
 }
 
 // Сканирование QR — ИСПРАВЛЕНО
+// const scanQR = () => {
+//   const WebApp = window.Telegram?.WebApp;
+//   if (WebApp && typeof WebApp.scanQrCode === 'function') {
+//     WebApp.scanQrCode().then(data => {
+//       if (data) {
+//         alert("Успех! Отсканировано: " + data);
+//       }
+//     });
+//   } else {
+//     alert("Платформа: " + WebApp?.platform + "\nМетод: " + (typeof WebApp?.scanQrCode) + "\nДомен: " + window.location.origin + "\nWebApp version: " + window.Telegram?.WebApp?.version);
+//   }
+// };
+
 const scanQR = () => {
   const WebApp = window.Telegram?.WebApp;
-  if (WebApp && typeof WebApp.scanQrCode === 'function') {
-    WebApp.scanQrCode().then(data => {
-      if (data) {
-        alert("Успех! Отсканировано: " + data);
-      }
+
+  if (!WebApp) {
+    alert("Telegram WebApp не инициализирован");
+    return;
+  }
+
+  // Проверяем наличие метода
+  if (typeof WebApp.openScanQrPopup === 'function') {
+    WebApp.openScanQrPopup({
+      text: "Отсканируйте QR-код клиента",
+      callback: (data) => {
+        if (data) {
+          WebApp.closeScanQrPopup();
+          alert("✅ Успех! Отсканировано: " + data);
+          // Можно сразу искать клиента:
+          searchQuery.value = data;
+          searchClient();
+        } else {
+          alert("QR-код не распознан");
+        }
+      },
     });
   } else {
-    alert("Платформа: " + WebApp?.platform + "\nМетод: " + (typeof WebApp?.scanQrCode) + "\nДомен: " + window.location.origin + "\nWebApp version: " + window.Telegram?.WebApp?.version);
+    alert(
+      "QR-сканер недоступен.\n" +
+      "Платформа: " + WebApp.platform + "\n" +
+      "Версия: " + WebApp.version + "\n\n" +
+      "Проверь, что Mini App запущен внутри Telegram (мобильный клиент ≥10.3)"
+    );
   }
 };
+
 
 // Начисление баллов
 const addPoints = async () => {
