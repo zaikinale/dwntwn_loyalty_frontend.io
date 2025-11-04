@@ -26,7 +26,7 @@
         {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR-код' }}
       </button>
 
-      <!-- Контейнер для кастомного видеопотока (только вне Telegram) -->
+      <!-- Контейнер для резервного сканера (только вне Telegram) -->
       <div
         v-if="isScanning && (!window.Telegram || !window.Telegram.WebApp)"
         id="qr-video-container"
@@ -168,7 +168,7 @@ const searchClient = async () => {
 const scanQR = async () => {
   errorMessage.value = ''
 
-  // 🔸 Telegram — нативный сканер
+  // 🔸 1. Telegram — приоритет
   if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
     try {
       const data = await Telegram.WebApp.scanQrCode()
@@ -182,7 +182,7 @@ const scanQR = async () => {
     return
   }
 
-  // 🔸 Вне Telegram — остановка, если уже сканируем
+  // 🔸 2. Вне Telegram — резервный сканер
   if (isScanning.value) {
     stopCustomScanner()
     return
@@ -195,7 +195,7 @@ const scanQR = async () => {
 
     const container = document.getElementById('qr-video-container')
     if (!container) {
-      throw new Error('Контейнер #qr-video-container не найден в DOM')
+      throw new Error('Контейнер #qr-video-container не найден')
     }
     container.innerHTML = ''
 
@@ -204,7 +204,7 @@ const scanQR = async () => {
     const config = {
       fps: 10,
       qrbox: { width: 250, height: 250 },
-      useBarCodeDetectorIfSupported: false, // ← отключаем проблемный API
+      useBarCodeDetectorIfSupported: false, // отключаем проблемный BarcodeDetector
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
     }
 
@@ -216,14 +216,14 @@ const scanQR = async () => {
         searchQuery.value = decodedText.trim()
         searchClient()
       },
-      (errorMessageScan) => {
-        if (!errorMessageScan.includes('NotFoundException')) {
-          console.warn('QR scan warning:', errorMessageScan)
+      (errMessage) => {
+        if (!errMessage.includes('NotFoundException')) {
+          console.warn('QR scan warning:', errMessage)
         }
       }
     )
   } catch (err) {
-    console.error('Ошибка запуска сканера:', err)
+    console.error('Ошибка резервного сканера:', err)
     const msg = err?.message || (typeof err === 'string' ? err : 'неизвестная ошибка')
     errorMessage.value = 'Не удалось запустить сканер: ' + msg
     isScanning.value = false
@@ -244,49 +244,51 @@ onBeforeUnmount(() => {
   stopCustomScanner()
 })
 
-// ... остальные функции (addPoints, redeemGift) — без изменений
-const addPoints = async () => {
-  if (!client.value || !purchaseAmount.value || purchaseAmount.value <= 0) {
-    errorMessage.value = "Укажите сумму покупки"
-    return
-  }
-  if (purchaseAmount.value > 4999) {
-    errorMessage.value = "Максимум 4999 руб."
-    return
-  }
+// Начисление баллов
+  const addPoints = async () => {
+    if (!client.value || !purchaseAmount.value || purchaseAmount.value <= 0) {
+      errorMessage.value = "Укажите сумму покупки"
+      return
+    }
+    if (purchaseAmount.value > 4999) {
+      errorMessage.value = "Максимум 4999 руб."
+      return
+    }
 
-  loading.value = true
-  try {
-    const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        client_id: client.value.id,
-        purchase_amount: purchaseAmount.value
-      })
-    })
-
-    if (res.ok) {
-      await searchClient()
-      purchaseAmount.value = 0
-      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
+    loading.value = true
+    try {
+      const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
+        body: JSON.stringify({
+          initData: getInitData(),
+          client_id: client.value.id,
+          purchase_amount: purchaseAmount.value
+        })
       })
-      myTransactions.value = await histRes.json()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Ошибка начисления"
-    }
-  } catch (e) {
-    errorMessage.value = "Ошибка подключения"
-  } finally {
-    loading.value = false
-  }
-}
 
+      if (res.ok) {
+        await searchClient()
+        purchaseAmount.value = 0
+        // Обновить историю
+        const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: getInitData() })
+        })
+        myTransactions.value = await histRes.json()
+      } else {
+        const err = await res.json()
+        errorMessage.value = err.detail || "Ошибка начисления"
+      }
+    } catch (e) {
+      errorMessage.value = "Ошибка подключения"
+    } finally {
+      loading.value = false
+    }
+  }
+
+// Выдача подарка
 const redeemGift = async () => {
   if (!client.value || !selectedGift.value) return
   const gift = gifts.value.find(g => g.id == selectedGift.value)
@@ -307,6 +309,7 @@ const redeemGift = async () => {
     if (res.ok) {
       await searchClient()
       selectedGift.value = ''
+      // Обновить историю
       const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -455,24 +458,5 @@ const redeemGift = async () => {
   color: #aaa;
   padding: 20px 0;
   font-style: italic;
-}
-/* Стили для видеопотока */
-#qr-video-container video {
-  width: 100%;
-  border-radius: 8px;
-  display: block;
-}
-#qr-video-container::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 250px;
-  height: 250px;
-  border: 2px solid #0d6efd;
-  box-shadow: 0 0 0 200vmax rgba(0, 0, 0, 0.6);
-  pointer-events: none;
-  border-radius: 4px;
 }
 </style>
