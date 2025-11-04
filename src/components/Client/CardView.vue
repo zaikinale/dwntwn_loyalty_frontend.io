@@ -40,12 +40,25 @@
     <div v-if="availableGifts.length === 0" class="empty">
       Нет доступных подарков
     </div>
-    <div v-for="gift in availableGifts" :key="gift.id" class="gift-item">
-      <div class="gift-content">
-        <img v-if="gift.image_url" :src="gift.image_url" class="gift-image" />
-        <span>{{ gift.name }}</span>
+    <div v-else class="gifts-grid">
+      <div v-for="gift in availableGifts" :key="gift.id" class="gift-card">
+        <div class="gift-image-wrapper">
+          <img
+            v-if="gift.image_url"
+            :src="gift.image_url"
+            :alt="gift.name"
+            class="gift-image"
+            @error="onImageError"
+          />
+          <div v-else class="gift-placeholder">
+            🎁
+          </div>
+        </div>
+        <div class="gift-details">
+          <h4 class="gift-name">{{ gift.name }}</h4>
+          <div class="gift-cost">{{ gift.points_cost }} баллов</div>
+        </div>
       </div>
-      <span>{{ gift.points_cost }} баллов</span>
     </div>
   </div>
 
@@ -72,20 +85,28 @@ import QrcodeVue from 'qrcode.vue'
 const props = defineProps({
   profile: { type: Object, required: true },
   gifts: { type: Array, required: true },
-  transactions: { type: Array, required: true } // ← добавлено
+  transactions: { type: Array, required: true }
 })
 
 const availableGifts = computed(() => {
   return props.gifts.filter(gift => gift.points_cost <= props.profile.points)
 })
 
+const isAnniversary = computed(() => {
+  // Пример: если нужно логику годовщины — замените на реальную
+  return false
+})
+
 const formatDateTime = (isoStr) => {
   return new Date(isoStr).toLocaleString('ru-RU')
+}
+
+const onImageError = (event) => {
+  console.warn('Не удалось загрузить изображение подарка:', event.target.src)
 }
 </script>
 
 <style scoped>
-/* ... ваш текущий CSS без изменений ... */
 .card {
   background: #111;
   border-radius: 12px;
@@ -97,6 +118,16 @@ const formatDateTime = (isoStr) => {
   margin-top: 0;
   margin-bottom: 16px;
   color: white;
+}
+.anniversary-banner {
+  background: linear-gradient(90deg, #ffd700, #ff8c00);
+  color: #000;
+  text-align: center;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 600;
+  margin: 16px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 .qr-container {
   display: flex;
@@ -137,27 +168,81 @@ const formatDateTime = (isoStr) => {
 .level-silver { color: #c0c0c0; }
 .level-gold { color: #ffd700; }
 .level-platina { color: #e5e4e2; }
-.gift-item {
+
+/* Сетка подарков */
+.gifts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+/* Карточка подарка */
+.gift-card {
+  background: #222;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 12px;
+  text-align: center;
+  transition: transform 0.2s;
+}
+.gift-card:hover {
+  transform: translateY(-2px);
+  background: #2a2a2a;
+}
+
+/* Обёртка изображения */
+.gift-image-wrapper {
+  width: 100%;
+  aspect-ratio: 1 / 1;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #333;
+  justify-content: center;
+  background: #333;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  overflow: hidden;
 }
-.gift-item:last-child {
-  border-bottom: none;
-}
-.gift-content {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+
 .gift-image {
-  width: 32px;
-  height: 32px;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-radius: 4px;
+  display: block;
 }
+
+.gift-placeholder {
+  font-size: 24px;
+  color: #666;
+}
+
+/* Детали подарка */
+.gift-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.gift-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.gift-cost {
+  font-size: 13px;
+  color: #0d6efd;
+  font-weight: 600;
+}
+
+/* История операций */
 .transaction-item {
   padding: 12px 0;
   border-bottom: 1px solid #333;
