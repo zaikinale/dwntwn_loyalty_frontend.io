@@ -66,7 +66,7 @@
         />
         <button @click="searchClient" :disabled="loading">Найти</button>
       </div>
-    
+
       <button @click="scanQR" class="btn-scan">
         {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR-код клиента' }}
       </button>
@@ -572,8 +572,14 @@ const scanQR = async () => {
     qrScanner.value = new Html5QrcodeScanner('qr-reader', config, false)
     qrScanner.value.render(onScanSuccess, onScanFailure)
   } catch (err) {
-    console.error('Не удалось запустить сканер:', err)
-    errorMessage.value = 'Камера недоступна. Убедитесь, что сайт открыт по HTTPS.'
+      console.error('Ошибка запуска сканера:', err)
+    if (err.name === 'NotAllowedError') {
+      errorMessage.value = 'Доступ к камере запрещён. Разрешите камеру в настройках браузера.'
+    } else if (err.name === 'NotFoundError') {
+      errorMessage.value = 'Камера не найдена.'
+    } else {
+      errorMessage.value = 'Не удалось запустить сканер: ' + (err.message || 'неизвестная ошибка')
+    }
     isScanning.value = false
   }
 }
