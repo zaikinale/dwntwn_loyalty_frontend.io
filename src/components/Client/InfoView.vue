@@ -95,7 +95,7 @@ export default {
         }
       } catch (error) {
         console.error('Ошибка при удалении аккаунта:', error);
-        alert(`initData: ${window.Telegram?.WebApp?.initData} Произошла ошибка при подключении к серверу. Попробуйте позже.`);
+        alert('Произошла ошибка при подключении к серверу. Попробуйте позже.');
       }
     }
   }
