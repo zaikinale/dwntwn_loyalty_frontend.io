@@ -57,7 +57,7 @@
 
   <div class="card">
     <h3>Управление аккаунтом</h3>
-    <button class="leave-button" @click="handleLeaveLoyalty">Покинуть программу лояльности</button>
+    <button class="leave-button" @click="leaveLoyaltyProgram">Покинуть программу лояльности</button>
   </div>
 </template>
 
