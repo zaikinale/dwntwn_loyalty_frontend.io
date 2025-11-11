@@ -282,7 +282,8 @@ onMounted(() => {
 @media (min-width: 768px) {
   .app-container {
     align-items: center;
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+    /* background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); */
+    background: none;
   }
 
   .header,
