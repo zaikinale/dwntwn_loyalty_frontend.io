@@ -22,6 +22,18 @@
   </div>
 
   <div class="card">
+    <h3>Оставить чаевые</h3>
+    <a
+      href="https://netmonet.co/qr/494339/groups/0?o=2"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="location-link"
+    >
+      нетмонет
+    </a>
+  </div>
+
+  <div class="card">
     <h3>Поддержка</h3>
     <a
       href="https://t.me/dwntwn_coffee_support_bot"
