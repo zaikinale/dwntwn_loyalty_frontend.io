@@ -206,7 +206,8 @@ onMounted(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #111;
+  /* background: #111; */
+  background: black;
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   padding: 0;
@@ -283,7 +284,6 @@ onMounted(() => {
   .app-container {
     align-items: center;
     /* background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); */
-    background: none;
   }
 
   .header,
