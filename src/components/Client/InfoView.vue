@@ -29,7 +29,7 @@
       rel="noopener noreferrer"
       class="location-link"
     >
-      нетмонет
+      cсылка на нетмонет
     </a>
   </div>
 
