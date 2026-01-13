@@ -12,7 +12,7 @@ if (tg) {
 }
 
 // === ГЛОБАЛЬНЫЕ НАСТРОЙКИ ===
-window.API_BASE = "https://back-dwntwn-io.onrender.com/".trim()
+window.API_BASE = "https://back-dwntwn-io.onrender.com ".trim()
 
 // === ЗАПУСК ПРИЛОЖЕНИЯ ===
 createApp(App).mount('#app')
