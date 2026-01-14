@@ -276,9 +276,16 @@
     </div>
   </div>
 
-  <!-- Аудит -->
-<div v-if="activeTab === 'audit'" class="tab active">
-  <div v-for="log in auditLogs" :key="log.id" class="audit-item-new" 
+  <!-- Аудит --><div v-if="activeTab === 'audit'" class="tab active">
+  
+  <div class="audit-filters">
+    <button :class="{ active: auditFilter === 'all' }" @click="auditFilter = 'all'">Все</button>
+    <button :class="{ active: auditFilter === 'creation' }" @click="auditFilter = 'creation'">✨ Создание</button>
+    <button :class="{ active: auditFilter === 'deletion' }" @click="auditFilter = 'deletion'">🗑 Удаление</button>
+    <button :class="{ active: auditFilter === 'broadcast' }" @click="auditFilter = 'broadcast'">📢 Рассылки</button>
+  </div>
+
+  <div v-for="log in filteredAuditLogs" :key="log.id" class="audit-item-new" 
        :style="{ borderLeftColor: getAuditStyle(log).color }">
     
     <div class="audit-badge" 
@@ -303,7 +310,8 @@
       </div>
     </div>
   </div>
-  <div v-if="auditLogs.length === 0" class="empty">История аудита пуста</div>
+  
+  <div v-if="filteredAuditLogs.length === 0" class="empty">Записей не найдено</div>
 </div>
 
   <!-- Пуш-рассылка -->
@@ -375,6 +383,17 @@ const formatDate = (dateString) => {
   });
 };
 
+const filteredAuditLogs = computed(() => {
+  if (auditFilter.value === 'all') return auditLogs.value;
+  return auditLogs.value.filter(log => {
+    const style = getAuditStyle(log);
+    if (auditFilter.value === 'creation') return style.label === 'Создание';
+    if (auditFilter.value === 'deletion') return style.label === 'Удаление';
+    if (auditFilter.value === 'broadcast') return log.type === 'broadcast_sent';
+    return true;
+  });
+});
+
 const props = defineProps({
   staffId: { type: Number, required: true }
 })
@@ -396,6 +415,7 @@ const gifts = ref([])
 const auditLogs = ref([])
 const client = ref(null)
 const giftsForRedeem = ref([])
+const auditFilter = ref('all');
 
 const currentNotifications = ref({ announcement: null, novelty: [], promotion: [] })
 
@@ -1305,5 +1325,31 @@ const sendBroadcast = async () => {
   background: #2a2a2a;
   padding: 2px 8px;
   border-radius: 4px;
+}
+
+.audit-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+  overflow-x: auto; /* Чтобы на телефонах можно было скроллить фильтры */
+  padding-bottom: 5px;
+}
+
+.audit-filters button {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: #888;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.audit-filters button.active {
+  background: #4dabf7;
+  color: #fff;
+  border-color: #4dabf7;
 }
 </style>
