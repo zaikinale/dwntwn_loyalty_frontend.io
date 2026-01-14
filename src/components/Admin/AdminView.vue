@@ -261,12 +261,16 @@
   <div v-if="activeTab === 'history'" class="tab active">
     <div class="card">
       <h3>История операций</h3>
-      <div v-for="t in transactions" :key="t.id" class="transaction-item">
-        <div :class="t.points_change > 0 ? 'points-positive' : 'points-negative'">
-          {{ t.points_change > 0 ? '+' : '' }}{{ t.points_change }}
+      <div v-for="t in transactions" :key="t.id" class="transaction-card">
+        <div class="tx-main">
+          <div :class="['tx-amount', t.points_change > 0 ? 'pos' : 'neg']">
+            {{ t.points_change > 0 ? '+' : '' }}{{ t.points_change }}
+          </div>
+          <div class="tx-details">
+            <div class="tx-user">{{ t.client_name }}</div>
+            <div class="tx-desc">{{ t.description }}</div>
+          </div>
         </div>
-        <div>{{ t.client_name }}</div>
-        <div>{{ t.description }}</div>
         <div class="timestamp">{{ formatDateTime(t.created_at) }}</div>
       </div>
     </div>
@@ -277,11 +281,21 @@
     <div class="card">
       <h3>Журнал действий администратора</h3>
       <div v-if="auditLogs.length === 0" class="empty">Нет записей</div>
-      <div v-for="log in auditLogs" :key="log.id" class="audit-item">
-        <div class="audit-description"><strong>{{ log.description }}</strong></div>
-        <div class="audit-meta">
-          <span v-if="log.staff_name">Админ: {{ log.staff_name }}</span>
-          <span class="date">{{ formatDateTime(log.created_at) }}</span>
+      <div v-for="log in auditLogs" :key="log.id" class="audit-item-new">
+        <div class="audit-badge" :style="{ backgroundColor: getAuditStyle(log.description).color }">
+          {{ getAuditStyle(log.description).icon }}
+        </div>
+        <div class="audit-info">
+          <div class="audit-header">
+            <span class="audit-label" :style="{ color: getAuditStyle(log.description).color }">
+              {{ getAuditStyle(log.description).label }}
+            </span>
+            <span class="date">{{ formatDateTime(log.created_at) }}</span>
+          </div>
+          <div class="audit-description"><strong>{{ log.description }}</strong></div>
+          <div class="audit-footer">
+            <span v-if="log.staff_name">👤 {{ log.staff_name }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -321,6 +335,16 @@ import { ref, onBeforeUnmount, onMounted } from 'vue'
 const isScanning = ref(false)
 const qrScanner = ref(null) // будет содержать экземпляр сканера
 // let codeReader = null
+
+const getAuditStyle = (description) => {
+  const desc = description.toLowerCase();
+  if (desc.includes('удалён') || desc.includes('удален')) return { icon: '🗑', color: '#ff4d4f', label: 'Удаление' };
+  if (desc.includes('добавлен')) return { icon: '➕', color: '#52c41a', label: 'Создание' };
+  if (desc.includes('начислено')) return { icon: '💰', color: '#faad14', label: 'Баллы' };
+  if (desc.includes('выдан')) return { icon: '🎁', color: '#722ed1', label: 'Подарок' };
+  if (desc.includes('рассылка') || desc.includes('уведомление')) return { icon: '📢', color: '#1890ff', label: 'Инфо' };
+  return { icon: '📝', color: '#8c8c8c', label: 'Действие' };
+};
 
 const props = defineProps({
   staffId: { type: Number, required: true }
@@ -1126,4 +1150,70 @@ const sendBroadcast = async () => {
   font-size: 12px;
   align-self: center;
 }
+
+/* Новые стили для Аудита */
+.audit-item-new {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border-left: 4px solid transparent;
+}
+
+.audit-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.audit-info { flex: 1; }
+
+.audit-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.audit-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+}
+
+.audit-footer {
+  font-size: 12px;
+  color: #888;
+  margin-top: 5px;
+}
+
+/* Стили для Истории транзакций */
+.transaction-card {
+  background: #1a1a1a;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tx-amount {
+  font-size: 18px;
+  font-weight: 700;
+  width: 60px;
+}
+
+.tx-amount.pos { color: #52c41a; }
+.tx-amount.neg { color: #ff4d4f; }
+
+.tx-user { font-weight: 600; color: #fff; }
+.tx-desc { font-size: 13px; color: #aaa; }
 </style>
