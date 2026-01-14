@@ -363,6 +363,18 @@ const getAuditStyle = (log) => {
   return { icon: '📝', color: '#8c8c8c', label: 'Действие' };
 };
 
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toLocaleString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+};
+
 const props = defineProps({
   staffId: { type: Number, required: true }
 })
