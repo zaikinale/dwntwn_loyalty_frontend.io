@@ -343,7 +343,7 @@
 </template>
 
 <script setup>
-import { ref, onBeforeUnmount, onMounted } from 'vue'
+import { ref, onBeforeUnmount, onMounted, computed } from 'vue'
 
 const isScanning = ref(false)
 const qrScanner = ref(null) // будет содержать экземпляр сканера
