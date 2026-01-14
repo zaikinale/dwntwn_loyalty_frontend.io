@@ -277,22 +277,26 @@
   </div>
 
   <!-- Аудит -->
-  <div v-if="activeTab === 'audit'" class="tab active">
+<div v-if="activeTab === 'audit'" class="tab active">
   <div v-for="log in auditLogs" :key="log.id" class="audit-item-new" 
-       :style="{ borderLeftColor: getAuditDetails(log.type).color }">
+       :style="{ borderLeftColor: getAuditStyle(log).color }">
     
     <div class="audit-badge" 
-         :style="{ backgroundColor: getAuditDetails(log.type).color + '22', color: getAuditDetails(log.type).color }">
-      {{ getAuditDetails(log.type).icon }}
+         :style="{ backgroundColor: getAuditStyle(log).color + '22', color: getAuditStyle(log).color }">
+      {{ getAuditStyle(log).icon }}
     </div>
 
     <div class="audit-info">
       <div class="audit-header">
-        <span class="audit-type">{{ getAuditDetails(log.type).label }}</span>
+        <span class="audit-type" :style="{ color: getAuditStyle(log).color }">
+          {{ getAuditStyle(log).label }}
+        </span>
         <span class="audit-date">{{ formatDate(log.created_at) }}</span>
       </div>
       
-      <div class="audit-desc">{{ log.description }}</div>
+      <div class="audit-desc">
+        {{ log.description.replace(/\[.*?\]\s?/, '') }}
+      </div>
       
       <div class="audit-footer">
         <span class="staff-tag">👤 {{ log.staff_name || 'Система' }}</span>
@@ -337,19 +341,27 @@ const isScanning = ref(false)
 const qrScanner = ref(null) // будет содержать экземпляр сканера
 // let codeReader = null
 // Добавьте это в секцию methods вашего Vue компонента
+const getAuditStyle = (log) => {
+  if (log.type === 'notification_created' || log.type === 'gift_created') {
+    return { icon: '✨', color: '#52c41a', label: 'Создание' };
+  }
+  if (log.type === 'notification_deleted' || log.type === 'gift_deleted') {
+    return { icon: '🗑', color: '#ff4d4f', label: 'Удаление' };
+  }
+  if (log.type === 'broadcast_sent') {
+    return { icon: '📢', color: '#1890ff', label: 'Рассылка' };
+  }
 
-getAuditDetails(type) {
-  const config = {
-    'notification_created': { icon: '🔔', label: 'Уведомление', color: '#4dabf7' },
-    'notification_deleted': { icon: '🗑', label: 'Удалено', color: '#ff6b6b' },
-    'gift_created': { icon: '🎁', label: 'Новый подарок', color: '#51cf66' },
-    'gift_deleted': { icon: '❌', label: 'Подарок удален', color: '#fab005' },
-    'broadcast_sent': { icon: '📢', label: 'Рассылка', color: '#be4bdb' },
-    'anniversary': { icon: '🎉', label: 'Годовщина', color: '#fcc419' }
-  };
+  const desc = log.description ? log.description.toLowerCase() : '';
+  if (desc.includes('удален') || desc.includes('удалено')) {
+    return { icon: '🗑', color: '#ff4d4f', label: 'Удаление' };
+  }
+  if (desc.includes('создан') || desc.includes('добавлен')) {
+    return { icon: '✨', color: '#52c41a', label: 'Создание' };
+  }
   
-  return config[type] || { icon: '📝', label: 'Действие', color: '#868e96' };
-}
+  return { icon: '📝', color: '#8c8c8c', label: 'Действие' };
+};
 
 const props = defineProps({
   staffId: { type: Number, required: true }
