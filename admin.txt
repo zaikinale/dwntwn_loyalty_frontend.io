@@ -278,29 +278,28 @@
 
   <!-- Аудит -->
   <div v-if="activeTab === 'audit'" class="tab active">
-  <div v-for="log in auditLogs" :key="log.id" class="audit-item-new" 
-       :style="{ borderLeftColor: getAuditDetails(log.type).color }">
-    
-    <div class="audit-badge" 
-         :style="{ backgroundColor: getAuditDetails(log.type).color + '22', color: getAuditDetails(log.type).color }">
-      {{ getAuditDetails(log.type).icon }}
-    </div>
-
-    <div class="audit-info">
-      <div class="audit-header">
-        <span class="audit-type">{{ getAuditDetails(log.type).label }}</span>
-        <span class="audit-date">{{ formatDate(log.created_at) }}</span>
-      </div>
-      
-      <div class="audit-desc">{{ log.description }}</div>
-      
-      <div class="audit-footer">
-        <span class="staff-tag">👤 {{ log.staff_name || 'Система' }}</span>
+    <div class="card">
+      <h3>Журнал действий администратора</h3>
+      <div v-if="auditLogs.length === 0" class="empty">Нет записей</div>
+      <div v-for="log in auditLogs" :key="log.id" class="audit-item-new">
+        <div class="audit-badge" :style="{ backgroundColor: getAuditStyle(log.description).color }">
+          {{ getAuditStyle(log.description).icon }}
+        </div>
+        <div class="audit-info">
+          <div class="audit-header">
+            <span class="audit-label" :style="{ color: getAuditStyle(log.description).color }">
+              {{ getAuditStyle(log.description).label }}
+            </span>
+            <span class="date">{{ formatDateTime(log.created_at) }}</span>
+          </div>
+          <div class="audit-description"><strong>{{ log.description }}</strong></div>
+          <div class="audit-footer">
+            <span v-if="log.staff_name">👤 {{ log.staff_name }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
-  <div v-if="auditLogs.length === 0" class="empty">История аудита пуста</div>
-</div>
 
   <!-- Пуш-рассылка -->
   <div v-if="activeTab === 'broadcast'" class="tab active">
@@ -336,20 +335,16 @@ import { ref, onBeforeUnmount, onMounted } from 'vue'
 const isScanning = ref(false)
 const qrScanner = ref(null) // будет содержать экземпляр сканера
 // let codeReader = null
-// Добавьте это в секцию methods вашего Vue компонента
 
-getAuditDetails(type) {
-  const config = {
-    'notification_created': { icon: '🔔', label: 'Уведомление', color: '#4dabf7' },
-    'notification_deleted': { icon: '🗑', label: 'Удалено', color: '#ff6b6b' },
-    'gift_created': { icon: '🎁', label: 'Новый подарок', color: '#51cf66' },
-    'gift_deleted': { icon: '❌', label: 'Подарок удален', color: '#fab005' },
-    'broadcast_sent': { icon: '📢', label: 'Рассылка', color: '#be4bdb' },
-    'anniversary': { icon: '🎉', label: 'Годовщина', color: '#fcc419' }
-  };
-  
-  return config[type] || { icon: '📝', label: 'Действие', color: '#868e96' };
-}
+const getAuditStyle = (description) => {
+  const desc = description.toLowerCase();
+  if (desc.includes('удалён') || desc.includes('удален')) return { icon: '🗑', color: '#ff4d4f', label: 'Удаление' };
+  if (desc.includes('добавлен')) return { icon: '➕', color: '#52c41a', label: 'Создание' };
+  if (desc.includes('начислено')) return { icon: '💰', color: '#faad14', label: 'Баллы' };
+  if (desc.includes('выдан')) return { icon: '🎁', color: '#722ed1', label: 'Подарок' };
+  if (desc.includes('рассылка') || desc.includes('уведомление')) return { icon: '📢', color: '#1890ff', label: 'Инфо' };
+  return { icon: '📝', color: '#8c8c8c', label: 'Действие' };
+}; 
 
 const props = defineProps({
   staffId: { type: Number, required: true }
@@ -1221,65 +1216,4 @@ const sendBroadcast = async () => {
 
 .tx-user { font-weight: 600; color: #fff; }
 .tx-desc { font-size: 13px; color: #aaa; }
-
-.audit-item-new {
-  display: flex;
-  gap: 15px;
-  padding: 16px;
-  background: #1e1e1e; /* Темный фон под стать всему приложению */
-  border-radius: 12px;
-  margin-bottom: 12px;
-  border-left: 4px solid transparent;
-  transition: transform 0.2s;
-}
-
-.audit-badge {
-  width: 45px;
-  height: 45px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-  flex-shrink: 0;
-}
-
-.audit-info {
-  flex: 1;
-}
-
-.audit-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.audit-type {
-  font-weight: bold;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.audit-date {
-  font-size: 12px;
-  color: #666;
-}
-
-.audit-desc {
-  color: #ddd;
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.staff-tag {
-  display: inline-block;
-  margin-top: 8px;
-  font-size: 11px;
-  color: #888;
-  background: #2a2a2a;
-  padding: 2px 8px;
-  border-radius: 4px;
-}
 </style>
