@@ -1084,8 +1084,11 @@ const sendBroadcast = async () => {
   justify-content: space-between;
 }
 .notification-section {
-  margin: 16px 0;
+  margin-bottom: 16px;
   padding: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 .notification-section h4 {
   margin: 12px 0 8px;
@@ -1093,6 +1096,7 @@ const sendBroadcast = async () => {
 .notification-item {
   position: relative;
   padding: 12px;
+  margin: 0 !important;
 }
 .notification-content {
   flex: 1;
