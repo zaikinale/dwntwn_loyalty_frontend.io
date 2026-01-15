@@ -226,7 +226,11 @@ const onImageError = (event) => {
   padding: 10px;
   border-radius: 10px;
 }
-.tx-main { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.tx-main { 
+  display: flex; 
+  flex-direction: column;
+  gap: 5px;
+}
 .tx-desc { font-size: 13px; color: #ccc; text-align: right; flex: 1; margin-left: 10px;}
 .points-positive { color: #52c41a; font-weight: bold; }
 .points-negative { color: #ff4d4f; font-weight: bold; }
