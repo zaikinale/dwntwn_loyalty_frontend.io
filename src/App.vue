@@ -199,14 +199,14 @@ onMounted(() => {
   authorizeStaff()
 })
 </script>
-
 <style>
+  /* 1. Глобальные стили (без scoped, чтобы влиять на всё приложение) */
   body {
     margin: 0;
     padding: 0;
     /* Укажите правильное название вашего файла */
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-                url('/assets/fone.webp') no-repeat center center fixed;
+                url('/assets/изображение.png') no-repeat center center fixed;
     background-size: cover;
     min-height: 100vh;
   }
