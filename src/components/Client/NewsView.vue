@@ -1,51 +1,48 @@
 <template>
   <div class="news-page">
-    <div class="scroll-container">
+    <div class="content-wrapper">
       
-      <div v-if="announcement" class="news-card announcement glass" :class="{ 'expanded': expandedId === 'ann' }">
-        <div class="card-tag urgent">Важно</div>
-        <img v-if="announcement.image_url" :src="announcement.image_url" class="card-img-top" />
-        <div class="card-content">
+      <div v-if="announcement" class="news-item announcement glass">
+        <div class="status-badge">Инфо</div>
+        <img v-if="announcement.image_url" :src="announcement.image_url" class="item-img" />
+        <div class="item-body">
           <h2>{{ announcement.title }}</h2>
-          <p class="description" :class="{ 'full-text': expandedId === 'ann' }">
-            {{ announcement.description }}
-          </p>
-          <button class="detail-btn" @click="toggleExpand('ann')">
+          <p :class="{ 'collapsed': expandedId !== 'ann' }">{{ announcement.description }}</p>
+          <button v-if="announcement.description.length > 80" class="btn-more" @click="toggleExpand('ann')">
             {{ expandedId === 'ann' ? 'Свернуть' : 'Подробнее' }}
           </button>
         </div>
       </div>
 
-      <div class="section-header" v-if="novelties.length">Новинки</div>
-      <div v-for="item in novelties" :key="item.id" 
-           class="news-card novelty glass" 
-           :class="{ 'expanded': expandedId === 'nov-' + item.id }">
-        <img v-if="item.image_url" :src="item.image_url" class="card-img-top" />
-        <div class="card-content">
+      <div class="section-title" v-if="novelties.length">Новинки</div>
+      <div v-for="item in novelties" :key="item.id" class="news-item novelty glass">
+        <img v-if="item.image_url" :src="item.image_url" class="item-img" />
+        <div class="item-body">
           <h3>{{ item.title }}</h3>
-          <p class="description" :class="{ 'full-text': expandedId === 'nov-' + item.id }">
-            {{ item.description }}
-          </p>
-          <button class="detail-btn" @click="toggleExpand('nov-' + item.id)">
+          <p :class="{ 'collapsed': expandedId !== 'nov-' + item.id }">{{ item.description }}</p>
+          <button v-if="item.description.length > 70" class="btn-more" @click="toggleExpand('nov-' + item.id)">
             {{ expandedId === 'nov-' + item.id ? 'Свернуть' : 'Подробнее' }}
           </button>
         </div>
       </div>
 
-      <div class="section-header" v-if="promotions.length">Акции</div>
-      <div class="promotions-row">
-        <div v-for="promo in promotions" :key="promo.id" class="promo-mini glass" @click="toggleExpand('pro-' + promo.id)">
-          <div class="promo-icon">🔥</div>
-          <div class="promo-info">
-            <h4>{{ promo.title }}</h4>
-            <div v-if="expandedId === 'pro-' + promo.id" class="promo-fade-in">
-              {{ promo.description }}
+      <div class="section-title" v-if="promotions.length">Акции</div>
+      <div class="promo-grid">
+        <div v-for="promo in promotions" :key="promo.id" class="promo-card glass">
+          <div class="promo-container">
+            <div class="promo-image-wrapper">
+              <img v-if="promo.image_url" :src="promo.image_url" class="promo-img" />
+              <div v-else class="promo-placeholder">🔥</div>
+            </div>
+            <div class="promo-info">
+              <h4>{{ promo.title }}</h4>
+              <p v-if="promo.description" class="promo-desc">{{ promo.description }}</p>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="bottom-spacer"></div>
+      <div class="bottom-padding"></div>
     </div>
   </div>
 </template>
@@ -69,7 +66,9 @@ const loadNotifications = async () => {
     announcement.value = data.find(n => n.type === 'announcement') || null
     novelties.value = data.filter(n => n.type === 'novelty')
     promotions.value = data.filter(n => n.type === 'promotion')
-  } catch (e) { console.error(e) }
+  } catch (e) {
+    console.error("Ошибка загрузки:", e)
+  }
 }
 
 const toggleExpand = (id) => {
@@ -78,130 +77,80 @@ const toggleExpand = (id) => {
 
 onMounted(loadNotifications)
 </script>
-
 <style scoped>
-.news-page {
-  height: 100vh;
-  overflow-y: auto;
-  color: white;
-  padding: 12px;
-  background: transparent;
-}
-
-.scroll-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.glass {
-  background: rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-.section-header {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin: 10px 0 4px 6px;
-}
-
-/* КАРТОЧКА ОБЩАЯ */
-.news-card {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  transition: all 0.3s ease;
-}
-
-.card-img-top {
-  width: 100%;
-  height: 200px;
-  object-fit: cover;
-  background: rgba(0,0,0,0.2);
-}
-
-.card-content {
-  padding: 16px;
-}
-
-.card-content h2, .card-content h3 {
-  margin: 0 0 8px 0;
-  font-size: 1.3rem;
-}
-
-/* УПРАВЛЕНИЕ ТЕКСТОМ */
-.description {
-  font-size: 0.95rem;
-  color: #ddd;
-  line-height: 1.4;
-  display: -webkit-box;
-  -webkit-line-clamp: 2; /* Скрываем лишнее */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.description.full-text {
-  display: block;
-  -webkit-line-clamp: unset;
-  overflow: visible;
-}
-
-.detail-btn {
-  background: transparent;
-  border: none;
-  color: #4dabf7;
-  padding: 10px 0 0 0;
-  font-weight: bold;
-  font-size: 0.9rem;
-  cursor: pointer;
-}
-
-/* ТЭГИ */
-.card-tag {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 0.7rem;
-  font-weight: bold;
-  z-index: 5;
-}
-.urgent { background: #ff4d4f; }
-
-/* АКЦИИ */
-.promotions-row {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.promo-mini {
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  gap: 15px;
-}
-
-.promo-icon { font-size: 1.5rem; }
-
-.promo-fade-in {
-  margin-top: 8px;
-  font-size: 0.85rem;
-  color: #bbb;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.bottom-spacer {
-  height: 100px; /* Чтобы контент не уходил под нижнюю навигацию */
-}
-</style>
+  .news-page {
+    min-height: 100vh;
+    padding: 16px;
+    color: white;
+    background: transparent;
+  }
+  
+  .content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .glass {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  
+  .section-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: -8px;
+    padding-left: 4px;
+  }
+  
+  /* ОБЪЯВЛЕНИЯ И НОВИНКИ */
+  .news-item { width: 100%; position: relative; }
+  .status-badge {
+    position: absolute; top: 12px; right: 12px;
+    background: #ff4d4f; padding: 3px 10px; border-radius: 8px;
+    font-size: 10px; font-weight: bold; z-index: 2;
+  }
+  .item-img { width: 100%; height: 210px; object-fit: cover; }
+  .item-body { padding: 16px; }
+  .item-body h2, .item-body h3 { margin: 0 0 8px 0; font-size: 1.3rem; }
+  .item-body p { font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0; }
+  
+  /* УМНОЕ СКРЫТИЕ ТЕКСТА */
+  .item-body p.collapsed {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .btn-more {
+    background: none; border: none; color: #4dabf7;
+    padding: 12px 0 0 0; font-weight: bold; font-size: 0.9rem; cursor: pointer;
+  }
+  
+  /* АКЦИИ С КАРТИНКАМИ */
+  .promo-grid { display: flex; flex-direction: column; gap: 12px; }
+  .promo-card { padding: 12px; }
+  .promo-container { display: flex; align-items: center; gap: 14px; }
+  
+  .promo-image-wrapper {
+    width: 80px; height: 80px; flex-shrink: 0;
+    border-radius: 14px; overflow: hidden;
+    background: rgba(0, 0, 0, 0.2);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .promo-img { width: 100%; height: 100%; object-fit: cover; }
+  .promo-placeholder { font-size: 1.6rem; }
+  
+  .promo-info { flex: 1; }
+  .promo-info h4 { margin: 0 0 4px 0; font-size: 1.05rem; }
+  .promo-desc { margin: 0; font-size: 0.85rem; color: #bbb; line-height: 1.3; }
+  
+  .bottom-padding { height: 110px; }
+  </style>
