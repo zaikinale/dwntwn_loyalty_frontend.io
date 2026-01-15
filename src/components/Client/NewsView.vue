@@ -6,7 +6,7 @@
 
     <div v-else>
       <div v-if="announcement" class="announcement-card glass">
-        <div class="announcement-badge">Важно</div>
+        <!-- <div class="announcement-badge">Важно</div> -->
         <img v-if="announcement.image_url" :src="announcement.image_url" alt="Объявление" class="ann-img" />
         <div class="announcement-content">
           <h2>{{ announcement.title }}</h2>
@@ -16,24 +16,26 @@
 
       <div v-if="novelties.length > 0" class="section-container">
         <h3 class="section-title">Новинки</h3>
-        <div class="novelties-slider glass">
-          <div class="slider-container" 
-               @touchstart="handleTouchStart" @touchend="handleTouchEnd">
-            <div v-for="(item, index) in novelties" :key="item.id" 
-                 class="slide" :class="{ active: currentIndex === index }">
-              <img v-if="item.image_url" :src="item.image_url" alt="Новинка" />
-              <div class="slide-content">
-                <h3>{{ item.title }}</h3>
-                <p>{{ item.description }}</p>
+          <div class="novelties-wrapper">
+            <div class="novelties-slider-native">
+              <div 
+                v-for="item in novelties" 
+                :key="item.id" 
+                class="novelty-slide-card glass"
+              >
+                <div class="slide-image-box">
+                  <img v-if="item.image_url" :src="item.image_url" alt="Новинка" />
+                  <div v-else class="img-placeholder">☕️</div>
+                </div>
+                <div class="slide-body">
+                  <h3>{{ item.title }}</h3>
+                  <p>{{ item.description }}</p>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="slider-dots">
-            <span v-for="(item, index) in novelties" :key="item.id"
-                  :class="{ active: currentIndex === index }" @click="goToSlide(index)"></span>
+            <div class="scroll-hint">листайте вправо →</div>
           </div>
         </div>
-      </div>
 
       <div v-if="promotions.length > 0" class="section-container">
         <h3 class="section-title">Акции</h3>
@@ -69,6 +71,90 @@
 
 <style scoped>
 /* Эффект стекла */
+.glass {
+  background: rgba(255, 255, 255, 0.08) !important;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.novelties-wrapper {
+  position: relative;
+  margin: 0 -12px; /* Вывод слайдера за поля для красоты */
+}
+
+.novelties-slider-native {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory; /* Магнитный эффект */
+  scroll-behavior: smooth;
+  gap: 12px;
+  padding: 0 12px 15px; /* Нижний паддинг, чтобы текст не прилипал */
+  scrollbar-width: none; /* Скрываем скроллбар FF */
+}
+
+.novelties-slider-native::-webkit-scrollbar {
+  display: none; /* Скрываем скроллбар Chrome/Safari */
+}
+
+.novelty-slide-card {
+  flex: 0 0 85vw; /* Слайд занимает 85% ширины экрана */
+  scroll-snap-align: center; /* Центрирование при скролле */
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 320px; /* Фиксируем минимальную высоту, чтобы не скакало */
+}
+
+.slide-image-box {
+  width: 100%;
+  height: 180px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.2);
+}
+
+.slide-image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.slide-body {
+  padding: 16px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.slide-body h3 {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.slide-body p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #ccc;
+  line-height: 1.4;
+  /* Ограничение текста, если его слишком много */
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.scroll-hint {
+  text-align: right;
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  padding-right: 20px;
+  margin-top: -10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
 .glass {
   background: rgba(255, 255, 255, 0.08) !important;
   backdrop-filter: blur(15px);
