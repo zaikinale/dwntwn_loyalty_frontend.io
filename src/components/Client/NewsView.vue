@@ -88,6 +88,8 @@ const loadNotifications = async () => {
   }
 }
 
+document.body.style.overflow = 'hidden';
+
 const openDetail = (item) => {
   selectedItem.value = item
   document.body.style.overflow = 'hidden'
@@ -181,29 +183,69 @@ onMounted(() => {
   .promo-img-wrapper img { width: 100%; height: 100%; object-fit: cover; }
   .promo-info h4 { font-size: 13px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   
-  /* МОДАЛКА */
-  .modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px);
-    display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px;
-  }
-  .modal-card {
-    width: 100%; max-width: 400px; max-height: 85vh;
-    position: relative; overflow-y: auto;
-  }
-  .modal-close-btn {
-    position: absolute; top: 12px; right: 12px;
-    width: 36px; height: 36px; border-radius: 50%;
-    background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2);
-    color: white; font-size: 20px; z-index: 10;
-  }
-  .modal-image-container img { width: 100%; max-height: 250px; object-fit: cover; }
-  .modal-content-area { padding: 20px; }
-  .modal-type-tag {
-    display: inline-block; background: #4dabf7; padding: 4px 10px;
-    border-radius: 6px; font-size: 11px; font-weight: bold; margin-bottom: 12px;
-  }
-  .modal-description { white-space: pre-wrap; color: #ddd; line-height: 1.5; }
+  /* МОДАЛКА *//* Фоновая подложка */
+.modal-overlay {
+  position: fixed; /* Фиксируем относительно окна браузера */
+  top: 0;
+  left: 0;
+  width: 100vw; /* Вся ширина */
+  height: 100vh; /* Вся высота */
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   
-  .promo-last { margin-bottom: 40px; }
+  display: flex;
+  align-items: center;     /* Центрирование по вертикали */
+  justify-content: center; /* Центрирование по горизонтали */
+  
+  z-index: 10000; /* Максимальный приоритет */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Сама карточка в модалке */
+.modal-card {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 24px;
+  width: 100%;
+  max-width: 400px;
+  max-height: 85vh; /* Ограничиваем высоту, чтобы не вылезала за экран */
+  overflow-y: auto; /* Если текста слишком много — внутри появится скролл */
+  position: relative;
+  
+  /* Плавное появление */
+  animation: modalSlideUp 0.3s ease-out;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+@keyframes modalSlideUp {
+  from { 
+    opacity: 0; 
+    transform: translateY(20px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+/* Исправление для кнопки закрытия, чтобы она не уезжала при скролле внутри модалки */
+.modal-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10100; /* Выше контента модалки */
+  cursor: pointer;
+}
   </style>
