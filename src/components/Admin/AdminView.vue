@@ -1021,11 +1021,8 @@ const sendBroadcast = async () => {
   display: block;
   width: 100%;
   font-size: 16px;
+  background: #222;
   font-weight: 600;
-}
-
-.btn-scan:hover {
-  background: #157347;
 }
 
 .client-result {
