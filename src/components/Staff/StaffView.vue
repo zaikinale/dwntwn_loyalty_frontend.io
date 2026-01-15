@@ -37,7 +37,7 @@
             type="number"
             placeholder="Сумма покупки"
             min="1"
-            max="4999"
+            max="2500"
           />
           <button @click="addPoints" :disabled="loading || !purchaseAmount">
             {{ loading ? 'Обработка...' : 'Начислить баллы' }}
@@ -246,8 +246,8 @@ const addPoints = async () => {
     errorMessage.value = "Укажите сумму покупки"
     return
   }
-  if (purchaseAmount.value > 4999) {
-    errorMessage.value = "Максимум 4999 руб."
+  if (purchaseAmount.value > 2500) {
+    errorMessage.value = "Максимум 2500 руб."
     return
   }
 

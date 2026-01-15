@@ -11,49 +11,6 @@
 
   <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
 
-  <!-- Рабочее место -->
-  <!-- <div v-if="activeTab === 'staff-mode'" class="tab active">
-    <div class="card">
-      <h3>Рабочее место сотрудника</h3>
-      <div class="search-box">
-        <input 
-          v-model="searchQuery" 
-          placeholder="Номер карты (DTLC-XXXXXX) / телефон (+7...)" 
-        />
-        <button @click="searchClient" :disabled="loading">Найти</button>
-      </div>
-      <button @click="scanQR" class="btn-scan">Сканировать QR-код клиента</button>
-      <div v-if="client" class="client-result">
-        <h4>{{ client.name }}</h4>
-        <p>Баллы: {{ client.points }} ({{ client.level }})</p> 
-
-        <div class="form-group">
-          <input 
-            v-model.number="purchaseAmount" 
-            type="number" 
-            placeholder="Сумма покупки" 
-            min="1" 
-            max="4999"
-          />
-          <button @click="addPoints" :disabled="loading || !purchaseAmount">
-            {{ loading ? 'Обработка...' : 'Начислить' }}
-          </button>
-        </div> 
-
-        <div class="form-group">
-          <select v-model="selectedGift">
-            <option value="">Выберите подарок</option>
-            <option v-for="g in giftsForRedeem" :key="g.id" :value="g.id">
-              {{ g.name }} ({{ g.points_cost }} баллов)
-            </option>
-          </select>
-          <button @click="redeemGift" :disabled="loading || !selectedGift">
-            {{ loading ? 'Обработка...' : 'Выдать подарок' }}
-          </button>
-        </div>
-      </div>
-    </div>
-  </div> -->
     <!-- Рабочее место -->
   <div v-if="activeTab === 'staff-mode'" class="tab active">  
     <div class="card">
@@ -70,7 +27,6 @@
         {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR' }}
       </button>
 
-      <!-- Контейнер для html5-qrcode (обязательно должен существовать в DOM) -->
       <div id="qr-reader" style="display: none;"></div>
 
       <div v-if="client" class="client-result">
@@ -83,7 +39,7 @@
             type="number" 
             placeholder="Сумма покупки" 
             min="1" 
-            max="4999"
+            max="2500"
           />
           <button @click="addPoints" :disabled="loading || !purchaseAmount">
             {{ loading ? 'Обработка...' : 'Начислить' }}
@@ -674,8 +630,8 @@ const addPoints = async () => {
     errorMessage.value = "Укажите сумму покупки"
     return
   }
-  if (purchaseAmount.value > 4999) {
-    errorMessage.value = "Максимум 4999 руб."
+  if (purchaseAmount.value > 2500) {
+    errorMessage.value = "Максимум 2500 руб."
     return
   }
   loading.value = true
@@ -1137,8 +1093,8 @@ const sendBroadcast = async () => {
   font-size: 12px;
   color: #aaa;
   position: absolute;
-  right: 10px;
-  top: 10px;
+  right: 15px;
+  top: 15px;
 }
 .empty {
   text-align: center;
