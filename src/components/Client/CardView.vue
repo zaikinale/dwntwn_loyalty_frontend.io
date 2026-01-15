@@ -19,7 +19,7 @@
     <div class="card-info">
       <div class="info-row">
         <span class="label">Уровень:</span>
-        <span class="value" :class="level-${profile.level.toLowerCase()}">{{ profile.level }}</span>
+        <span class="value" :class="`level-${profile.level.toLowerCase()}`">{{ profile.level }}</span>
       </div>
       <div class="info-row">
         <span class="label">Баланс:</span>
