@@ -1,7 +1,4 @@
 <template>
-  <div class="header">
-    <h1>Рабочее место сотрудника</h1>
-  </div>
   <div class="nav">
     <button :class="{ active: activeTab === 'workplace' }" @click="activeTab = 'workplace'">
       Рабочее место
@@ -20,7 +17,7 @@
           v-model="searchQuery"
           placeholder="Номер карты (DTLC-XXXXXX) или телефон (+7...)"
         />
-        <button @click="searchClient" :disabled="loading">Найти</button>
+        <button class="search-btn" @click="searchClient" :disabled="loading">Найти</button>
       </div>
       <button @click="scanQR" class="btn-scan">
         {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR-код' }}
@@ -364,37 +361,41 @@ const redeemGift = async () => {
 .card > h3 {
   margin-bottom: 10px;
 }
+
 .search-box {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
-.search-box input {
-  flex: 1;
-  min-width: 180px;
+.search-btn, .search-box input {
   padding: 10px;
-  border: 1px solid #444;
   border-radius: 6px;
   background: #222;
-  color: white;
   font-size: 14px;
+  color: white;
+  border: none !important;
 }
+
+.search-box input  {
+  flex: 1;
+  min-width: 180px;
+}
+
 .btn-scan {
-  background: #198754;
   color: white;
   border: none;
   padding: 12px 16px;
   border-radius: 8px;
   margin: 16px 0;
+  cursor: pointer;
+  display: block;
   width: 100%;
   font-size: 16px;
+  background: #222;
   font-weight: 600;
-  cursor: pointer;
 }
-.btn-scan:hover {
-  background: #157347;
-}
+
 .client-result {
   background: #222;
   padding: 16px;
