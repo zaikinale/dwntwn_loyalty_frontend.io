@@ -145,7 +145,7 @@
           <p>{{ currentNotifications.announcement.description }}</p>
           <small>Истекает: {{ formatDateTime(currentNotifications.announcement.expires_at) }}</small>
         </div>
-        <button @click="deleteNotification(currentNotifications.announcement.id)" class="btn-delete">Удалить</button>
+        <button @click="deleteNotification(currentNotifications.announcement.id)" class="btn-delete-notific">Удалить</button>
       </div>
       <div v-else class="empty">Нет активного объявления</div>
     </div>
@@ -159,7 +159,7 @@
           <p>{{ n.description }}</p>
           <small>Истекает: {{ formatDateTime(n.expires_at) }}</small>
         </div>
-        <button @click="deleteNotification(n.id)" class="btn-delete">Удалить</button>
+        <button @click="deleteNotification(n.id)" class="btn-delete-notific">Удалить</button>
       </div>
       <div v-if="currentNotifications.novelty.length === 0" class="empty">Нет новинок</div>
     </div>
@@ -173,7 +173,7 @@
           <p>{{ n.description }}</p>
           <small>Истекает: {{ formatDateTime(n.expires_at) }}</small>
         </div>
-        <button @click="deleteNotification(n.id)" class="btn-delete">Удалить</button>
+        <button @click="deleteNotification(n.id)" class="btn-delete-notific">Удалить</button>
       </div>
       <div v-if="currentNotifications.promotion.length === 0" class="empty">Нет акций</div>
     </div>
@@ -1052,15 +1052,6 @@ const sendBroadcast = async () => {
   object-fit: cover;
   border-radius: 4px;
 }
-.btn-delete {
-  background: #dc3545;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
 .transaction-item,
 .audit-item {
   padding: 12px 0;
@@ -1123,10 +1114,13 @@ const sendBroadcast = async () => {
   padding: 12px 0;
   font-style: italic;
 }
-.btn-delete {
+.btn-delete-notific {
   position: absolute;
   top: 15px;
   right: 15px;
+}
+
+.btn-delete, .btn-delete-notific {
   background: #dc3545;
   color: white;
   border: none;
