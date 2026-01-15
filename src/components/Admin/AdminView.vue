@@ -998,15 +998,17 @@ const sendBroadcast = async () => {
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
-.search-box input, .search-btn {
+.search-btn, .search-box input {
+  padding: 10px;
+  border-radius: 6px;
+  background: #222;
+  font-size: 14px;
+  color: white;
+}
+
+.search-box input  {
   flex: 1;
   min-width: 180px;
-  padding: 10px;
-  border: 1px solid #444;
-  border-radius: 6px;
-  font-size: 14px;
-  background: #222;
-  color: white;
 }
 .btn-scan {
   background: #198754;
