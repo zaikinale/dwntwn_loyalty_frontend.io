@@ -1,5 +1,5 @@
 <template>
-  <div class="header"><h1>Админ-панель</h1></div>
+  <div class="sub-head"><h1>Админ-панель</h1></div>
   <div class="nav" style="position:static; background:none; border:none; padding:0;">
     <button :class="{ active: activeTab === 'staff-mode' }" @click="switchTab('staff-mode')">Рабочее место</button>
     <button :class="{ active: activeTab === 'staff' }" @click="switchTab('staff')">Персонал</button>

@@ -250,8 +250,7 @@ onMounted(() => {
   .sub-head h1 {
     text-align: center;
     margin: 0;
-    font-size: clamp(1.5rem, 4vw, 2.2rem);
-    font-weight: 700;
+    font-weight: 500;
     color: white;
     padding: 0 !important;
   }
