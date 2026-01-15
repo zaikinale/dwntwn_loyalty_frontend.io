@@ -1258,13 +1258,23 @@ const sendBroadcast = async () => {
   padding: 2px 8px;
   border-radius: 4px;
 }
-
 .audit-filters {
   display: flex;
   gap: 8px;
   margin-bottom: 15px;
   overflow-x: auto;
   padding-bottom: 5px;
+  
+  -webkit-overflow-scrolling: touch;
+}
+
+.audit-filters::-webkit-scrollbar {
+  display: none;
+}
+
+.audit-filters {
+  -ms-overflow-style: none; 
+  scrollbar-width: none; 
 }
 
 .audit-filters button {
