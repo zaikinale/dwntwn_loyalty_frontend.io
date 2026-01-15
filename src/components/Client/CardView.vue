@@ -231,13 +231,13 @@ const onImageError = (event) => {
   flex-direction: column;
   gap: 5px;
 }
-.tx-desc { font-size: 13px; color: #ccc; text-align: right; flex: 1; margin-left: 10px;}
+.tx-desc { font-size: 13px; color: #ccc; flex: 1; margin-left: 10px;}
 .points-positive { color: #52c41a; font-weight: bold; }
 .points-negative { color: #ff4d4f; font-weight: bold; }
 .timestamp { 
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 10px;
+  right: 10px;
   font-size: 11px; 
   color: #777; 
 }
