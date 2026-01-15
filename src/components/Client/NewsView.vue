@@ -88,8 +88,6 @@ const loadNotifications = async () => {
   }
 }
 
-document.body.style.overflow = 'hidden';
-
 const openDetail = (item) => {
   selectedItem.value = item
   document.body.style.overflow = 'hidden'
