@@ -63,7 +63,7 @@
           v-model="searchQuery" 
           placeholder="Номер карты (DTLC-XXXXXX) / телефон (+7...)" 
         />
-        <button @click="searchClient" :disabled="loading">Найти</button>
+        <button class="search-btn" @click="searchClient" :disabled="loading">Найти</button>
       </div>
 
       <button @click="scanQR" class="btn-scan">
@@ -1044,7 +1044,7 @@ const sendBroadcast = async () => {
 }
 .form-group input,
 .form-group select,
-.form-group textarea {
+.form-group > textarea {
   padding: 10px;
   border: 1px solid #444;
   border-radius: 6px;
@@ -1053,7 +1053,7 @@ const sendBroadcast = async () => {
   background: #222;
   color: white;
 }
-.form-group textarea {
+.form-group > textarea {
   min-height: 80px;
   resize: vertical;
 }
