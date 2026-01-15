@@ -1,24 +1,39 @@
 <template>
   <div class="news-wrapper">
-    <div v-if="announcement" class="main-announcement glass" @click="openDetail(announcement)">
+    <div v-if="announcement" class="main-announcement glass" :class="{ 'is-expanded': expandedId === 'ann' }">
       <div class="badge">ВАЖНО</div>
       <img :src="announcement.image_url" class="ann-img" v-if="announcement.image_url" />
       <div class="ann-body">
         <h2>{{ announcement.title }}</h2>
-        <p>{{ announcement.description.substring(0, 80) }}...</p>
+        <div class="text-content" :class="{ 'show-all': expandedId === 'ann' }">
+          {{ announcement.description }}
+        </div>
+        <button class="expand-btn" @click="toggleExpand('ann')">
+          {{ expandedId === 'ann' ? 'Свернуть' : 'Подробнее' }}
+        </button>
       </div>
     </div>
 
     <div class="section" v-if="novelties.length">
       <h3 class="title">Новинки</h3>
-      <div class="horizontal-scroll">
-        <div v-for="item in novelties" :key="item.id" class="card-novelty glass" @click="openDetail(item)">
+      <div class="horizontal-scroll" :class="{ 'has-expanded': expandedId && expandedId.startsWith('nov-') }">
+        <div 
+          v-for="item in novelties" 
+          :key="item.id" 
+          class="card-novelty glass" 
+          :class="{ 'is-expanded': expandedId === 'nov-' + item.id }"
+        >
           <div class="card-img">
             <img :src="item.image_url" v-if="item.image_url" />
           </div>
           <div class="card-body">
             <h3>{{ item.title }}</h3>
-            <p>{{ item.description }}</p>
+            <div class="text-content" :class="{ 'show-all': expandedId === 'nov-' + item.id }">
+              {{ item.description }}
+            </div>
+            <button class="expand-btn" @click="toggleExpand('nov-' + item.id)">
+              {{ expandedId === 'nov-' + item.id ? 'Свернуть' : 'Подробнее' }}
+            </button>
           </div>
         </div>
       </div>
@@ -27,24 +42,15 @@
     <div class="section last-section" v-if="promotions.length">
       <h3 class="title">Акции</h3>
       <div class="horizontal-scroll">
-        <div v-for="promo in promotions" :key="promo.id" class="card-promo glass" @click="openDetail(promo)">
+        <div v-for="promo in promotions" :key="promo.id" class="card-promo glass" @click="toggleExpand('pro-' + promo.id)">
           <div class="promo-img">
             <img :src="promo.image_url" v-if="promo.image_url" />
             <span v-else>🔥</span>
           </div>
           <h4>{{ promo.title }}</h4>
-        </div>
-      </div>
-    </div>
-
-    <div v-if="selectedItem" class="modal-root" @click="closeDetail">
-      <div class="modal-window glass" @click.stop>
-        <button class="close-x" @click="closeDetail">✕</button>
-        <img :src="selectedItem.image_url" class="modal-big-img" v-if="selectedItem.image_url" />
-        <div class="modal-text">
-          <span class="type-label">{{ selectedItem.type }}</span>
-          <h2>{{ selectedItem.title }}</h2>
-          <div class="desc">{{ selectedItem.description }}</div>
+          <div v-if="expandedId === 'pro-' + promo.id" class="promo-mini-desc">
+            {{ promo.description }}
+          </div>
         </div>
       </div>
     </div>
@@ -57,7 +63,7 @@ import { ref, onMounted } from 'vue'
 const announcement = ref(null)
 const novelties = ref([])
 const promotions = ref([])
-const selectedItem = ref(null)
+const expandedId = ref(null) // Хранит ID раскрытого элемента
 
 const loadNotifications = async () => {
   try {
@@ -73,24 +79,20 @@ const loadNotifications = async () => {
   } catch (e) { console.error(e) }
 }
 
-const openDetail = (item) => {
-  selectedItem.value = item
-  document.body.style.overflow = 'hidden'
-}
-
-const closeDetail = () => {
-  selectedItem.value = null
-  document.body.style.overflow = 'auto'
+const toggleExpand = (id) => {
+  if (expandedId.value === id) {
+    expandedId.value = null
+  } else {
+    expandedId.value = id
+  }
 }
 
 onMounted(loadNotifications)
 </script>
 <style scoped>
-  /* ГЛОБАЛЬНЫЕ СТИЛИ КОНТЕЙНЕРА */
   .news-wrapper {
     padding: 15px;
     color: white;
-    max-width: 100vw;
     overflow-x: hidden;
   }
   
@@ -100,101 +102,85 @@ onMounted(loadNotifications)
     -webkit-backdrop-filter: blur(15px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 16px;
-    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .section { margin-top: 25px; }
   .title { font-size: 1.2rem; margin: 0 0 12px 5px; font-weight: bold; }
-  .last-section { margin-bottom: 50px; }
+  
+  /* ТЕКСТОВАЯ ЛОГИКА */
+  .text-content {
+    font-size: 0.9rem;
+    color: #ccc;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* В свернутом виде только 2 строки */
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+  
+  .text-content.show-all {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+    color: #fff;
+  }
+  
+  .expand-btn {
+    background: none;
+    border: none;
+    color: #4dabf7;
+    padding: 8px 0 0;
+    font-size: 0.85rem;
+    font-weight: bold;
+    cursor: pointer;
+  }
   
   /* ОБЪЯВЛЕНИЕ */
-  .main-announcement { position: relative; margin-bottom: 20px; width: 100%; }
+  .main-announcement { position: relative; margin-bottom: 20px; }
+  .main-announcement.is-expanded { transform: scale(1.02); }
   .badge {
     position: absolute; top: 12px; right: 12px;
-    background: #ff4d4f; padding: 4px 10px;
-    border-radius: 8px; font-size: 10px; font-weight: 900; z-index: 2;
+    background: #ff4d4f; padding: 4px 10px; border-radius: 8px; font-size: 10px; font-weight: 900;
   }
   .ann-img { width: 100%; height: 180px; object-fit: cover; }
   .ann-body { padding: 15px; }
-  .ann-body h2 { margin: 0 0 5px; font-size: 1.3rem; }
-  .ann-body p { color: #ccc; font-size: 0.9rem; }
   
-  /* ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ (УНИВЕРСАЛЬНЫЙ) */
+  /* ГОРИЗОНТАЛЬНЫЙ СКРОЛЛ */
   .horizontal-scroll {
     display: flex;
     overflow-x: auto;
     scroll-snap-type: x mandatory;
     gap: 15px;
-    padding-bottom: 10px;
+    padding: 10px 5px 20px;
     scrollbar-width: none;
   }
   .horizontal-scroll::-webkit-scrollbar { display: none; }
   
   /* КАРТОЧКА НОВИНКИ */
   .card-novelty {
-    flex: 0 0 80vw; /* Четкий размер: 80% ширины экрана */
-    scroll-snap-align: center;
+    flex: 0 0 80vw;
+    scroll-snap-align: start;
     display: flex;
     flex-direction: column;
+    height: max-content; /* Чтобы не срезалось */
   }
-  .card-img { width: 100%; height: 150px; background: rgba(0,0,0,0.2); }
+  
+  .card-novelty.is-expanded {
+    flex: 0 0 90vw; /* Немного увеличиваем при раскрытии */
+    z-index: 10;
+  }
+  
+  .card-img { width: 100%; height: 150px; }
   .card-img img { width: 100%; height: 100%; object-fit: cover; }
   .card-body { padding: 15px; }
-  .card-body h3 { margin: 0 0 8px; font-size: 1.1rem; }
-  .card-body p { 
-    font-size: 0.9rem; color: #bbb; 
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-  }
   
-  /* КАРТОЧКА АКЦИИ */
-  .card-promo { flex: 0 0 130px; padding: 10px; text-align: center; }
-  .promo-img { 
-    width: 100%; aspect-ratio: 1; border-radius: 12px; overflow: hidden;
-    background: rgba(0,0,0,0.2); margin-bottom: 8px;
-    display: flex; align-items: center; justify-content: center; font-size: 2rem;
-  }
+  /* АКЦИИ */
+  .card-promo { flex: 0 0 130px; padding: 10px; height: fit-content; }
+  .promo-img { width: 100%; aspect-ratio: 1; border-radius: 12px; background: rgba(0,0,0,0.2); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; }
   .promo-img img { width: 100%; height: 100%; object-fit: cover; }
-  .card-promo h4 { font-size: 0.85rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .promo-mini-desc { font-size: 0.75rem; color: #aaa; margin-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px; }
   
-  /* МОДАЛЬНОЕ ОКНО (ЖЕСТКОЕ ЦЕНТРИРОВАНИЕ) */
-  .modal-root {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.9);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    display: flex;
-    align-items: center;    /* СТРОГО ЦЕНТР */
-    justify-content: center; /* СТРОГО ЦЕНТР */
-    z-index: 99999;
-  }
-  
-  .modal-window {
-    width: 90%;
-    max-width: 400px;
-    max-height: 80vh;
-    position: relative;
-    overflow-y: auto;
-    border: 1px solid rgba(255,255,255,0.2);
-    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-  }
-  
-  .close-x {
-    position: absolute; top: 15px; right: 15px;
-    width: 35px; height: 35px; border-radius: 50%;
-    background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.3);
-    color: white; font-size: 20px; z-index: 10;
-    display: flex; align-items: center; justify-content: center;
-  }
-  
-  .modal-big-img { width: 100%; max-height: 250px; object-fit: cover; }
-  .modal-text { padding: 25px; }
-  .type-label { 
-    display: inline-block; background: #4dabf7; padding: 3px 8px; 
-    border-radius: 5px; font-size: 10px; font-weight: bold; margin-bottom: 15px;
-    text-transform: uppercase;
-  }
-  .modal-text h2 { margin: 0 0 15px; font-size: 1.5rem; }
-  .desc { line-height: 1.6; color: #ddd; white-space: pre-wrap; font-size: 1rem; }
+  .last-section { margin-bottom: 60px; }
   </style>
