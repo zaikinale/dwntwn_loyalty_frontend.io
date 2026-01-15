@@ -1,4 +1,3 @@
-<!-- src/App.vue -->
 <template>
   <div v-if="!userRole" class="app-container">
     <div class="card">
@@ -26,9 +25,6 @@
       <div v-show="activeTab === 'news'" class="tab active">
         <NewsView />
       </div>
-      <!-- <div v-show="activeTab === 'history'" class="tab active">
-        <HistoryView :transactions="transactions" />
-      </div> -->
       <div v-show="activeTab === 'info'" class="tab active">
         <InfoView />
       </div>
@@ -44,7 +40,6 @@
     <div class="nav" v-if="userRole === 'client'">
       <button :class="{ active: activeTab === 'card' }" @click="activeTab = 'card'">Карта</button>
       <button :class="{ active: activeTab === 'news' }" @click="activeTab = 'news'">Новости</button>
-      <!-- <button :class="{ active: activeTab === 'history' }" @click="activeTab = 'history'">История</button> -->
       <button :class="{ active: activeTab === 'info' }" @click="activeTab = 'info'">Инфо</button>
     </div>
   </div>
@@ -55,7 +50,6 @@ import { ref, onMounted } from 'vue'
 import RegisterForm from './components/Client/RegisterForm.vue'
 import CardView from './components/Client/CardView.vue'
 import NewsView from './components/Client/NewsView.vue'
-// import HistoryView from './components/Client/HistoryView.vue'
 import InfoView from './components/Client/InfoView.vue'
 import StaffView from './components/Staff/StaffView.vue'
 import AdminView from './components/Admin/AdminView.vue'
@@ -72,53 +66,6 @@ const getInitData = () => {
   return window.Telegram?.WebApp?.initData || ""
 }
 
-// const loadProfile = async () => {
-//   try {
-//     const res = await fetch(`${window.API_BASE}/api/client/profile`, {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ initData: getInitData() })
-//     })
-//     if (res.ok) {
-//       profile.value = await res.json()
-//       isRegistered.value = true
-
-//       const giftsRes = await fetch(`${window.API_BASE}/api/client/gifts`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ initData: getInitData() })
-//       })
-//       gifts.value = await giftsRes.json()
-
-//       const txRes = await fetch(`${window.API_BASE}/api/client/transactions`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ initData: getInitData() })
-//       })
-//       transactions.value = await txRes.json()
-
-//       const notifRes = await fetch(`${window.API_BASE}/api/client/user-notifications`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json' },
-//         body: JSON.stringify({ initData: getInitData() })
-//       })
-//       if (notifRes.ok) {
-//         const notifications = await notifRes.json()
-//         const unread = notifications.filter(n => !n.is_read)
-//         if (unread.length > 0) {
-//           const first = unread[0]
-//           alert(`🔔 ${first.title}\n\n${first.message}`)
-//         }
-//       }
-//     } else {
-//       isRegistered.value = false
-//     }
-//   } catch (e) {
-//     console.error(e)
-//     isRegistered.value = false
-//   }
-// }
-
 const loadProfile = async () => {
   try {
     const res = await fetch(`${window.API_BASE}/api/client/profile`, {
@@ -130,7 +77,6 @@ const loadProfile = async () => {
       profile.value = await res.json()
       isRegistered.value = true
 
-      // Загрузка подарков
       const giftsRes = await fetch(`${window.API_BASE}/api/client/gifts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -138,7 +84,6 @@ const loadProfile = async () => {
       })
       gifts.value = await giftsRes.json()
 
-      // Загрузка истории операций ← НОВОЕ
       const txRes = await fetch(`${window.API_BASE}/api/client/transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -146,7 +91,6 @@ const loadProfile = async () => {
       })
       transactions.value = await txRes.json()
 
-      // Загрузка уведомлений
       const notifRes = await fetch(`${window.API_BASE}/api/client/user-notifications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -200,14 +144,27 @@ onMounted(() => {
 })
 </script>
 <style>
-  /* 1. Глобальные стили (без scoped, чтобы влиять на всё приложение) */
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  html, body {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .app-container, .tab, .card {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;
     margin: 0;  
   }
 
-/* Скрываем стрелки в Firefox */
   input[type="number"] {
     -moz-appearance: textfield;
   }
@@ -215,7 +172,6 @@ onMounted(() => {
   body {
     margin: 0 auto;
     padding: 0;
-    /* Укажите правильное название вашего файла */
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
                 url('/assets/fone.webp') no-repeat center center fixed;
     background-size: cover;
@@ -227,12 +183,11 @@ onMounted(() => {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background: transparent !important; /* Убираем черный фон */
+    background: transparent !important;
     color: white;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
   
-  /* 3. Заголовок (делаем прозрачным) */
   .header {
     padding: clamp(16px, 5vw, 24px);
     background: rgba(0, 0, 0, 0.4) !important;
@@ -250,8 +205,6 @@ onMounted(() => {
     color: white;
   }
   
-  /* 4. Универсальная карточка с эффектом стекла */
-  /* Эти стили применятся ко всем карточкам во всех View (Admin, Staff, Client) */
   .card, .tab, .audit-item-new, .transaction-card, .notification-item, .gift-item {
     background: rgba(255, 255, 255, 0.08) !important;
     backdrop-filter: blur(15px) !important;
@@ -262,8 +215,7 @@ onMounted(() => {
     padding: clamp(15px, 5vw, 25px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
-  
-  /* 5. Навигация */
+
   .nav {
     display: flex;
     gap: 8px;
