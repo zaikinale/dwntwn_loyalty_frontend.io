@@ -2,7 +2,6 @@
   <div v-if="isAnniversary" class="anniversary-banner">
     🎉 Сегодня ваша годовщина в программе лояльности!
   </div>
-
   <div class="card glass">
     <h3>Ваша карта</h3>
     <div class="qr-container">
@@ -25,9 +24,12 @@
         <span class="label">Баланс:</span>
         <span class="value">{{ profile.points }} баллов</span>
       </div>
+      <div class="info-row">
+        <span class="label">Заработано всего:</span>
+        <span class="value">{{ profile.total_earned_points }}</span>
+      </div>
     </div>
   </div>
-
   <div class="card glass">
     <h3>Подарки за баллы</h3>
     <div v-if="gifts.length === 0" class="empty">Подарков пока нет 🙁</div>
@@ -54,7 +56,7 @@
         
         <div class="gift-details">
           <h4 class="gift-name">{{ gift.name }}</h4>
-          <div class="gift-cost">{{ gift.points_cost }} б.</div>
+          <div class="gift-cost">{{ gift.points_cost }} баллов</div>
         </div>
       </div>
     </div>
@@ -118,22 +120,21 @@ const onImageError = (event) => {
 
 .card h3 { margin: 0 0 16px 0; font-size: 1.1rem; }
 
-/* СТИЛИ СЛАЙДЕРА */
 .gifts-slider {
   display: flex;
   overflow-x: auto;
   gap: 12px;
   padding-bottom: 8px;
-  scroll-snap-type: x mandatory; /* Прилипание */
-  scrollbar-width: none; /* Скрыть скроллбар Firefox */
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none; 
 }
 
 .gifts-slider::-webkit-scrollbar {
-  display: none; /* Скрыть скроллбар Chrome/Safari */
+  display: none; 
 }
 
 .gift-card-new {
-  flex: 0 0 130px; /* Фиксированная ширина карточки в слайдере */
+  flex: 0 0 130px;
   scroll-snap-align: start;
   background: rgba(255, 255, 255, 0.05);
   border-radius: 12px;
@@ -142,8 +143,6 @@ const onImageError = (event) => {
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-
-/* Состояние: Недостаточно баллов */
 .gift-card-new.locked {
   opacity: 0.5;
   filter: grayscale(0.8);
@@ -191,8 +190,35 @@ const onImageError = (event) => {
   font-weight: bold;
   font-size: 12px;
 }
+.card-info {
+  background: rgba(0, 0, 0, 0.2); /* Чуть притеняем подложку данных */
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 15px;
+}
 
-/* ИСТОРИЯ */
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 0;
+  font-size: 14px;
+}
+
+.label {
+  color: rgba(255, 255, 255, 0.6)
+}
+
+.value {
+  font-weight: 600;
+  color: #fff;
+}
+
+.level-bronze { color: #cd7f32; }
+.level-silver { color: #c0c0c0; }
+.level-gold { color: #ffd700; }
+.level-platina { color: #e5e4e2; }
+
 .transaction-list { display: flex; flex-direction: column; gap: 10px; }
 .transaction-item {
   background: rgba(255, 255, 255, 0.03);
@@ -205,7 +231,6 @@ const onImageError = (event) => {
 .points-negative { color: #ff4d4f; font-weight: bold; }
 .timestamp { font-size: 11px; color: #777; }
 
-/* QR Код */
 .qr-wrapper { background: white; padding: 12px; border-radius: 12px; display: inline-block; }
 .qr-container { text-align: center; }
 .card-info { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; margin-top: 15px; }
