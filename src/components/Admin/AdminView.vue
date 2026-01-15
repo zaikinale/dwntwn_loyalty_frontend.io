@@ -1054,6 +1054,7 @@ const sendBroadcast = async () => {
   color: white;
 }
 .form-group > textarea {
+  width: 100%;
   min-height: 80px;
   resize: vertical;
 }
@@ -1100,7 +1101,7 @@ const sendBroadcast = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
+  padding: 12px;
   border-bottom: 1px solid #333;
   color: white;
 }
