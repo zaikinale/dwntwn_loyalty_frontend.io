@@ -221,6 +221,7 @@ const onImageError = (event) => {
 
 .transaction-list { display: flex; flex-direction: column; gap: 10px; }
 .transaction-item {
+  position: relative;
   background: rgba(255, 255, 255, 0.03);
   padding: 10px;
   border-radius: 10px;
@@ -229,7 +230,13 @@ const onImageError = (event) => {
 .tx-desc { font-size: 13px; color: #ccc; text-align: right; flex: 1; margin-left: 10px;}
 .points-positive { color: #52c41a; font-weight: bold; }
 .points-negative { color: #ff4d4f; font-weight: bold; }
-.timestamp { font-size: 11px; color: #777; }
+.timestamp { 
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 11px; 
+  color: #777; 
+}
 
 .qr-wrapper { background: white; padding: 12px; border-radius: 12px; display: inline-block; }
 .qr-container { text-align: center; }
