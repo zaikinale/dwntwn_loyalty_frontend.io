@@ -202,7 +202,7 @@ onMounted(() => {
 <style>
   /* 1. Глобальные стили (без scoped, чтобы влиять на всё приложение) */
   body {
-    margin: 0;
+    margin: 0 auto;
     padding: 0;
     /* Укажите правильное название вашего файла */
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
