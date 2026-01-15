@@ -1,68 +1,62 @@
 <template>
   <div class="news-page">
     <div v-if="!announcement && novelties.length === 0 && promotions.length === 0" class="empty-news glass">
-      Новостей пока что нет, но они скоро появятся!
+      Новостей пока что нет...
     </div>
 
     <div v-else>
-      <div v-if="announcement" class="announcement-card glass">
-        <!-- <div class="announcement-badge">Важно</div> -->
-        <img v-if="announcement.image_url" :src="announcement.image_url" alt="Объявление" class="ann-img" />
+      <div v-if="announcement" class="announcement-card glass" @click="openDetail(announcement)">
+        <div class="announcement-badge">Важно</div>
+        <img v-if="announcement.image_url" :src="announcement.image_url" class="ann-img" />
         <div class="announcement-content">
           <h2>{{ announcement.title }}</h2>
-          <p>{{ announcement.description }}</p>
+          <p>{{ announcement.description.substring(0, 100) }}...</p>
         </div>
       </div>
 
       <div v-if="novelties.length > 0" class="section-container">
         <h3 class="section-title">Новинки</h3>
-          <div class="novelties-wrapper">
-            <div class="novelties-slider-native">
-              <div 
-                v-for="item in novelties" 
-                :key="item.id" 
-                class="novelty-slide-card glass"
-              >
-                <div class="slide-image-box">
-                  <img v-if="item.image_url" :src="item.image_url" alt="Новинка" />
-                  <div v-else class="img-placeholder">☕️</div>
-                </div>
-                <div class="slide-body">
-                  <h3>{{ item.title }}</h3>
-                  <p>{{ item.description }}</p>
-                </div>
-              </div>
+        <div class="novelties-slider-native">
+          <div v-for="item in novelties" :key="item.id" 
+               class="novelty-slide-card glass" @click="openDetail(item)">
+            <img v-if="item.image_url" :src="item.image_url" />
+            <div class="slide-body">
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.description }}</p>
             </div>
-            <div class="scroll-hint">листайте вправо →</div>
           </div>
         </div>
+      </div>
 
       <div v-if="promotions.length > 0" class="section-container">
         <h3 class="section-title">Акции</h3>
         <div class="promotions-slider">
           <div v-for="promo in promotions" :key="promo.id" 
-               class="promo-item glass" @click="openPromoDetail(promo)">
+               class="promo-item glass" @click="openDetail(promo)">
             <div class="promo-img-wrapper">
-              <img v-if="promo.image_url" :src="promo.image_url" :alt="promo.title" />
+              <img v-if="promo.image_url" :src="promo.image_url" />
               <div v-else class="promo-placeholder">🔥</div>
             </div>
-            <div class="promo-info">
-              <h4>{{ promo.title }}</h4>
-            </div>
+            <h4>{{ promo.title }}</h4>
           </div>
         </div>
       </div>
     </div>
 
-    <div v-if="selectedPromo" class="modal-overlay" @click="closePromoDetail">
-      <div class="modal-content glass" @click.stop>
-        <button class="modal-close" @click="closePromoDetail">×</button>
-        <div class="modal-body">
-          <img v-if="selectedPromo.image_url" :src="selectedPromo.image_url" class="modal-img-full" />
-          <div class="modal-text">
-            <h2>{{ selectedPromo.title }}</h2>
-            <p>{{ selectedPromo.description }}</p>
+    <div v-if="selectedItem" class="modal-overlay" @click="closeDetail">
+      <div class="modal-card glass" @click.stop>
+        <button class="modal-close-btn" @click="closeDetail">✕</button>
+        
+        <div class="modal-image-container" v-if="selectedItem.image_url">
+          <img :src="selectedItem.image_url" />
+        </div>
+        
+        <div class="modal-content-area">
+          <div class="modal-type-tag" v-if="selectedItem.type">
+            {{ selectedItem.type === 'promotion' ? 'Акция' : selectedItem.type === 'novelty' ? 'Новинка' : 'Инфо' }}
           </div>
+          <h2>{{ selectedItem.title }}</h2>
+          <div class="modal-description">{{ selectedItem.description }}</div>
         </div>
       </div>
     </div>
@@ -240,6 +234,10 @@
 .modal-close { position: absolute; top: 10px; right: 10px; font-size: 30px; color: white; background: none; border: none; z-index: 10; }
 .modal-img-full { width: 100%; max-height: 250px; object-fit: cover; }
 .modal-text { padding: 20px; }
+
+.promo-last {
+  margin-bottom: 30px;
+}
 </style>
 <style scoped>
 /* Эффект стекла */
@@ -327,6 +325,101 @@
 .modal-close { position: absolute; top: 10px; right: 10px; font-size: 30px; color: white; background: none; border: none; z-index: 10; }
 .modal-img-full { width: 100%; max-height: 250px; object-fit: cover; }
 .modal-text { padding: 20px; }
+
+/* Модальное окно */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85); /* Затемнение */
+  backdrop-filter: blur(10px); /* Размытие фона за окном */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modal-card {
+  width: 100%;
+  max-width: 400px;
+  max-height: 80vh;
+  position: relative;
+  overflow-y: auto; /* Если текст очень длинный */
+  display: flex;
+  flex-direction: column;
+  animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Кнопка закрытия */
+.modal-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.modal-image-container {
+  width: 100%;
+  max-height: 250px;
+  overflow: hidden;
+}
+
+.modal-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.modal-content-area {
+  padding: 20px;
+}
+
+.modal-type-tag {
+  display: inline-block;
+  font-size: 10px;
+  text-transform: uppercase;
+  background: #4dabf7;
+  padding: 4px 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.modal-content-area h2 {
+  margin: 0 0 12px 0;
+  font-size: 1.4rem;
+}
+
+.modal-description {
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #ddd;
+  white-space: pre-wrap; /* Сохраняет переносы строк из базы */
+}
+
+/* Скрываем скролл модалки для чистоты */
+.modal-card::-webkit-scrollbar {
+  display: none;
+}
 </style>
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
@@ -354,6 +447,18 @@ const loadNotifications = async () => {
     console.error("Ошибка загрузки новостей:", e)
   }
 }
+
+const selectedItem = ref(null);
+
+const openDetail = (item) => {
+  selectedItem.value = item;
+  document.body.style.overflow = 'hidden';
+};
+
+const closeDetail = () => {
+  selectedItem.value = null;
+  document.body.style.overflow = 'auto';
+};
 
 let touchStartX = 0
 let mouseStartX = 0
