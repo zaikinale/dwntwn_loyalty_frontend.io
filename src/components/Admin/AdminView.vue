@@ -1056,7 +1056,7 @@ const sendBroadcast = async () => {
 .form-group > textarea {
   width: 100%;
   min-height: 80px;
-  resize: vertical;
+  resize: none;
 }
 .form-group button {
   padding: 10px 20px;
