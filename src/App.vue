@@ -201,6 +201,17 @@ onMounted(() => {
 </script>
 <style>
   /* 1. Глобальные стили (без scoped, чтобы влиять на всё приложение) */
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;  
+  }
+
+/* Скрываем стрелки в Firefox */
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
   body {
     margin: 0 auto;
     padding: 0;

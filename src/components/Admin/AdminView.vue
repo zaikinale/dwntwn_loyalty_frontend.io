@@ -151,7 +151,7 @@
 <div v-if="activeTab === 'notifications'" class="tab active">
   <!-- Форма добавления -->
   <div class="card">
-    <h3>Добавить уведомление</h3>
+    <h3>Добавить новость</h3>
     <div class="form-group">
       <select v-model="newNotification.type">
         <option value="promotion">Акция</option>
@@ -1078,7 +1078,6 @@ const sendBroadcast = async () => {
   justify-content: space-between;
   align-items: center;
   padding: 12px 0;
-  border-bottom: 1px solid #333;
   color: white;
 }
 .btn-select {
