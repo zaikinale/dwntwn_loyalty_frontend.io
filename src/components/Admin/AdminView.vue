@@ -316,7 +316,7 @@
   <!-- Пуш-рассылка -->
   <div v-if="activeTab === 'broadcast'" class="tab active">
   <div class="card">
-    <h3>Пуш-рассылка всем клиентам</h3>
+    <h3>Рассылка пользователям:</h3>
     <div class="form-group">
       <input v-model="broadcast.title" placeholder="Заголовок рассылки" />
     </div>
@@ -998,7 +998,7 @@ const sendBroadcast = async () => {
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
-.search-box input {
+.search-box input, .search-btn {
   flex: 1;
   min-width: 180px;
   padding: 10px;
@@ -1199,7 +1199,7 @@ const sendBroadcast = async () => {
   display: flex;
   gap: 12px;
   padding: 16px;
-  background: #1a1a1a;
+  background: #1a1a1a !important;
   border-radius: 8px;
   margin-bottom: 10px;
   border-left: 4px solid transparent;
