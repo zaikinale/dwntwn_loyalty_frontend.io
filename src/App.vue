@@ -211,7 +211,6 @@ onMounted(() => {
     min-height: 100vh;
   }
   
-  /* 2. Контейнер приложения */
   .app-container {
     min-height: 100vh;
     display: flex;

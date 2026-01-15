@@ -1,5 +1,5 @@
 <template>
-  <div class="nav" style="position:static; background:none; border:none; padding:0;">
+  <div class="nav" style="position:static; background:none; border:none; margin:0 !important;">
     <button :class="{ active: activeTab === 'staff-mode' }" @click="switchTab('staff-mode')">Рабочее место</button>
     <button :class="{ active: activeTab === 'staff' }" @click="switchTab('staff')">Персонал</button>
     <button :class="{ active: activeTab === 'notifications' }" @click="switchTab('notifications')">Уведомления</button>
