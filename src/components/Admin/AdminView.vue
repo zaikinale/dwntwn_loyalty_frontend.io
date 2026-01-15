@@ -67,7 +67,7 @@
       </div>
 
       <button @click="scanQR" class="btn-scan">
-        {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR-код клиента' }}
+        {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR' }}
       </button>
 
       <!-- Контейнер для html5-qrcode (обязательно должен существовать в DOM) -->
@@ -597,7 +597,7 @@ const scanQR = async () => {
         await searchClient()
       }
     } catch (err) {
-      errorMessage.value = "Не удалось отсканировать QR-код в Telegram"
+      errorMessage.value = "Не удалось отсканировать QR"
     }
     return
   }
@@ -1004,6 +1004,7 @@ const sendBroadcast = async () => {
   background: #222;
   font-size: 14px;
   color: white;
+  border: none !important;
 }
 
 .search-box input  {
@@ -1011,12 +1012,11 @@ const sendBroadcast = async () => {
   min-width: 180px;
 }
 .btn-scan {
-  background: #198754;
   color: white;
   border: none;
   padding: 12px 16px;
   border-radius: 8px;
-  margin: 16px 0 24px;
+  margin: 16px 0;
   cursor: pointer;
   display: block;
   width: 100%;
