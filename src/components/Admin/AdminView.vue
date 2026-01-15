@@ -992,6 +992,7 @@ const sendBroadcast = async () => {
   margin-bottom: 16px;
   color: white;
 }
+
 .search-box {
   display: flex;
   gap: 8px;
@@ -1011,6 +1012,7 @@ const sendBroadcast = async () => {
   flex: 1;
   min-width: 180px;
 }
+
 .btn-scan {
   color: white;
   border: none;
@@ -1131,10 +1133,12 @@ const sendBroadcast = async () => {
 .audit-item:last-child {
   border-bottom: none;
 }
-.timestamp,
-.date {
+.timestamp {
   font-size: 12px;
   color: #aaa;
+  position: absolute;
+  right: 10px;
+  top: 10px;
 }
 .empty {
   text-align: center;
@@ -1238,13 +1242,12 @@ const sendBroadcast = async () => {
 
 /* Стили для Истории транзакций */
 .transaction-card {
-  background: #1a1a1a;
+  position: relative;
+  background: #1a1a1a !important;
   padding: 12px;
+  border: none;
   border-radius: 8px;
   margin-bottom: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .tx-amount {
