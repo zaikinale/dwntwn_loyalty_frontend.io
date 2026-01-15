@@ -206,7 +206,7 @@ onMounted(() => {
     padding: 0;
     /* Укажите правильное название вашего файла */
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
-                url('/assets/изображение.png') no-repeat center center fixed;
+                url('/assets/fone.webp') no-repeat center center fixed;
     background-size: cover;
     min-height: 100vh;
   }
