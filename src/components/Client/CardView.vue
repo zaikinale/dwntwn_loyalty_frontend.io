@@ -1,4 +1,3 @@
-<!-- src/components/Client/CardView.vue -->
 <template>
   <div v-if="isAnniversary" class="anniversary-banner">
     🎉 Сегодня ваша годовщина в программе лояльности!
@@ -93,7 +92,6 @@ const availableGifts = computed(() => {
 })
 
 const isAnniversary = computed(() => {
-  // Пример: если нужно логику годовщины — замените на реальную
   return false
 })
 
@@ -169,7 +167,6 @@ const onImageError = (event) => {
 .level-gold { color: #ffd700; }
 .level-platina { color: #e5e4e2; }
 
-/* Сетка подарков */
 .gifts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
@@ -177,7 +174,6 @@ const onImageError = (event) => {
   margin-top: 12px;
 }
 
-/* Карточка подарка */
 .gift-card {
   background: #222;
   border-radius: 12px;
@@ -191,7 +187,6 @@ const onImageError = (event) => {
   background: #2a2a2a;
 }
 
-/* Обёртка изображения */
 .gift-image-wrapper {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -216,7 +211,6 @@ const onImageError = (event) => {
   color: #666;
 }
 
-/* Детали подарка */
 .gift-details {
   display: flex;
   flex-direction: column;
@@ -242,7 +236,6 @@ const onImageError = (event) => {
   font-weight: 600;
 }
 
-/* История операций */
 .transaction-item {
   padding: 12px 0;
   border-bottom: 1px solid #333;

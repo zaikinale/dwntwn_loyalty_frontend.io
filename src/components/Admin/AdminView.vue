@@ -2,11 +2,11 @@
   <div class="nav" style="position:static; background:none; border:none; margin:0 !important;">
     <button :class="{ active: activeTab === 'staff-mode' }" @click="switchTab('staff-mode')">Рабочее место</button>
     <button :class="{ active: activeTab === 'staff' }" @click="switchTab('staff')">Персонал</button>
-    <button :class="{ active: activeTab === 'notifications' }" @click="switchTab('notifications')">Уведомления</button>
+    <button :class="{ active: activeTab === 'notifications' }" @click="switchTab('notifications')">Новости</button>
     <button :class="{ active: activeTab === 'gifts' }" @click="switchTab('gifts')">Подарки</button>
     <button :class="{ active: activeTab === 'history' }" @click="switchTab('history')">История</button>
     <button :class="{ active: activeTab === 'audit' }" @click="switchTab('audit')">Аудит</button>
-    <button :class="{ active: activeTab === 'broadcast' }" @click="switchTab('broadcast')">Пуш-рассылка</button>
+    <button :class="{ active: activeTab === 'broadcast' }" @click="switchTab('broadcast')">Рассылка</button>
   </div>
 
   <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -128,13 +128,13 @@
       <input v-model.number="newNotification.days" type="number" placeholder="Дней действия" min="1" />
     </div>
     <button @click="addNotification" class="btn" :disabled="loading">
-      {{ loading ? 'Создание...' : 'Добавить уведомление' }}
+      {{ loading ? 'Создание...' : 'Добавить в новости' }}
     </button>
   </div>
 
   <!-- Текущие уведомления -->
   <div class="card">
-    <h3>Текущие уведомления</h3>
+    <h3>Текущая стена новостей</h3>
 
     <!-- Объявление -->
     <div class="notification-section">
@@ -279,7 +279,6 @@
     <div class="form-group">
       <textarea v-model="broadcast.message" placeholder="Текст сообщения" rows="4"></textarea>
     </div>
-    <!-- НОВОЕ ПОЛЕ: ссылка на изображение -->
     <div class="form-group">
       <input v-model="broadcast.image_url" placeholder="Ссылка на изображение (необязательно)" />
     </div>
@@ -460,9 +459,7 @@ const deleteNotification = async (id) => {
       body: JSON.stringify({ initData: getInitData(), notification_id: id })
     })
     if (res.ok) {
-      // Обновляем список
       await loadCurrentNotifications()
-      // Обновляем аудит
       loadAuditLogs()
     } else {
       const err = await res.json()
@@ -527,21 +524,6 @@ const searchClient = async () => {
   }
 }
 
-// const scanQR = () => {
-//   if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
-//     Telegram.WebApp.scanQrCode().then(data => {
-//       if (data) {
-//         alert("Отсканировано: " + data);
-//       }
-//     }).catch(err => {
-//       alert("Ошибка сканирования");
-//     });
-//   } else {
-//     alert("scanQrCode недоступен\n" +
-//           "WebApp: " + !!Telegram?.WebApp + "\n" +
-//           "Метод: " + typeof Telegram?.WebApp?.scanQrCode);
-//   }
-// };
 const scanQR = async () => {
   clearError()
 
@@ -1118,11 +1100,8 @@ const sendBroadcast = async () => {
   margin: 12px 0 8px;
 }
 .notification-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  position: relative;
   padding: 12px;
-  border-bottom: 1px solid #333;
 }
 .notification-content {
   flex: 1;
@@ -1131,6 +1110,7 @@ const sendBroadcast = async () => {
 .notification-content h5 {
   margin: 0 0 6px;
   font-size: 16px;
+  max-width: 60%;
 }
 .notification-content p {
   margin: 0 0 8px;
@@ -1144,6 +1124,9 @@ const sendBroadcast = async () => {
   font-style: italic;
 }
 .btn-delete {
+  position: absolute;
+  top: 15px;
+  right: 15px;
   background: #dc3545;
   color: white;
   border: none;
@@ -1196,7 +1179,6 @@ const sendBroadcast = async () => {
   margin-top: 5px;
 }
 
-/* Стили для Истории транзакций */
 .transaction-card {
   position: relative;
   background: #1a1a1a !important;

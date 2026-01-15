@@ -1,6 +1,5 @@
 <template>
   <div class="news-page">
-    <!-- Сообщение, если ничего нет -->
     <div v-if="!announcement && novelties.length === 0 && promotions.length === 0" class="empty-news">
       Новостей пока что нет, но они обязательно скоро появятся!
     </div>
@@ -106,7 +105,6 @@ const loadNotifications = async () => {
     })
     const data = await res.json()
 
-    // Фильтрация по типам
     announcement.value = data.find(n => n.type === 'announcement') || null
     novelties.value = data.filter(n => n.type === 'novelty')
     promotions.value = data.filter(n => n.type === 'promotion')
@@ -115,7 +113,6 @@ const loadNotifications = async () => {
   }
 }
 
-// === СВАЙП ДЛЯ СЛАЙДЕРА ===
 let touchStartX = 0
 let mouseStartX = 0
 let isDragging = false
@@ -160,20 +157,16 @@ const handleMouseLeave = () => {
   }
 }
 
-
-// Автопрокрутка слайдера
 const startAutoSlide = () => {
   sliderInterval = setInterval(() => {
     currentIndex.value = (currentIndex.value + 1) % novelties.value.length
-  }, 5000) // каждые 5 секунд
+  }, 5000)
 }
 
-// Обновите goToSlide, чтобы он поддерживал циклическую навигацию
 const goToSlide = (index) => {
   const total = novelties.value.length
   if (total === 0) return
 
-  // Циклическая навигация
   if (index < 0) index = total - 1
   if (index >= total) index = 0
 
@@ -211,7 +204,6 @@ onUnmounted(() => {
   color: white;
 }
 
-/* Объявление */
 .announcement {
   background: #222;
   border-radius: 12px;
@@ -281,7 +273,6 @@ onUnmounted(() => {
   background: #0d6efd;
 }
 
-/* Акции */
 .promotions h2 {
   margin-bottom: 16px;
   font-size: 20px;
@@ -349,7 +340,7 @@ onUnmounted(() => {
   width: 100%;
   max-width: 480px;
   max-height: 85vh;
-  overflow: hidden; /* Важно: скрывает всё, что выходит за рамки */
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
@@ -375,7 +366,7 @@ onUnmounted(() => {
 }
 .modal-image-wrapper {
   width: 100%;
-  aspect-ratio: 16 / 9; /* Соотношение, можно 1/1 если квадрат */
+  aspect-ratio: 16 / 9;
   background: #222;
   border-radius: 10px;
   overflow: hidden;

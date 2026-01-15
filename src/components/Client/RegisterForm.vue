@@ -57,7 +57,6 @@ const isValid = computed(() => {
   return form.value.lastName.trim() && form.value.firstName.trim()
 })
 
-// Надёжное получение initData
 function waitForTelegramInit(timeoutMs = 3000) {
   return new Promise((resolve) => {
     const start = Date.now()
@@ -75,13 +74,11 @@ function waitForTelegramInit(timeoutMs = 3000) {
   })
 }
 
-// Автофокус и инициализация
 onMounted(() => {
   const tg = window.Telegram?.WebApp
   if (tg) {
     tg.expand()
     tg.ready()
-    // Попытка фокуса (работает на Android)
     setTimeout(() => {
       const firstInput = document.querySelector('input')
       if (firstInput) {

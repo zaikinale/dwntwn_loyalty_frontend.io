@@ -23,14 +23,12 @@
         {{ isScanning ? 'Остановить сканирование' : 'Сканировать QR-код' }}
       </button>
 
-      <!-- Контейнер для html5-qrcode (ТОЧЬ-В-ТОЧЬ как в админке) -->
       <div id="qr-reader" style="display: none;"></div>
 
       <div v-if="client" class="client-result">
         <h4>{{ client.name }}</h4>
         <p>Баллы: {{ client.points }} (уровень: {{ client.level }})</p>
 
-        <!-- Начисление баллов -->
         <div class="form-group">
           <input
             v-model.number="purchaseAmount"
@@ -44,7 +42,6 @@
           </button>
         </div>
 
-        <!-- Выдача подарка -->
         <div class="form-group">
           <select v-model="selectedGift">
             <option value="">Выберите подарок</option>
@@ -156,11 +153,9 @@ const searchClient = async () => {
   }
 }
 
-// 🔸 СКАНИРОВАНИЕ — ТОЧЬ-В-ТОЧЬ КАК В АДМИНКЕ
 const scanQR = async () => {
   errorMessage.value = ''
 
-  // Telegram — приоритет
   if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
     try {
       const data = await Telegram.WebApp.scanQrCode()
@@ -174,7 +169,6 @@ const scanQR = async () => {
     return
   }
 
-  // Резервный сканер
   if (isScanning.value) {
     stopHtml5QrScanner()
     return
@@ -238,8 +232,6 @@ const stopHtml5QrScanner = () => {
 onBeforeUnmount(() => {
   stopHtml5QrScanner()
 })
-
-// ——— ОСТАЛЬНЫЕ ФУНКЦИИ БЕЗ ИЗМЕНЕНИЙ ———
 
 const addPoints = async () => {
   if (!client.value || !purchaseAmount.value || purchaseAmount.value <= 0) {
@@ -322,7 +314,6 @@ const redeemGift = async () => {
 </script>
 
 <style scoped>
-/* ... ваш существующий CSS без изменений ... */
 .header h1 {
   color: white;
   text-align: center;
