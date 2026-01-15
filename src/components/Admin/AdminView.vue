@@ -896,7 +896,7 @@ const sendBroadcast = async () => {
 .nav button {
   background: #222;
   color: #ddd;
-  border: 1px solid #444;
+  border: none !important;
   padding: 8px 12px;
   border-radius: 6px;
   cursor: pointer;
@@ -917,7 +917,7 @@ const sendBroadcast = async () => {
   border-radius: 6px;
   margin: 12px 0;
   font-weight: 500;
-  border: 1px solid #8b2626;
+  border: none !important;
 }
 .card {
   background: #111;
@@ -983,7 +983,7 @@ const sendBroadcast = async () => {
 .form-group select,
 .form-group > textarea {
   padding: 10px;
-  border: 1px solid #444;
+  border: none !important;
   border-radius: 6px;
   font-size: 14px;
   min-width: 160px;
@@ -1030,7 +1030,7 @@ const sendBroadcast = async () => {
   color: #ffd700;
   font-size: 12px;
   padding: 4px 8px;
-  border: 1px solid #ffd700;
+  border: none !important;
   border-radius: 4px;
 }
 .gift-item {
@@ -1270,7 +1270,7 @@ const sendBroadcast = async () => {
 .audit-filters button {
   padding: 6px 12px;
   border-radius: 20px;
-  border: 1px solid #333;
+  border: none !important;
   background: #1a1a1a;
   color: #888;
   font-size: 12px;
