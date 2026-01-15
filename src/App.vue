@@ -200,114 +200,85 @@ onMounted(() => {
 })
 </script>
 
-<style scoped>
-/* Общий контейнер приложения */
-.app-container {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  /* background: #111; */
-  background: black;
-  color: white;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  padding: 0;
-  margin: 0;
-}
-
-/* Заголовок */
-.header {
-  padding: clamp(16px, 5vw, 24px);
-  background: #000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-}
-.header h1 {
-  text-align: center;
-  margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2.2rem);
-  font-weight: 700;
-  color: white;
-}
-
-/* Контент-карточка */
-.card {
-  background: #1a1a1a;
-  border-radius: 16px;
-  margin: clamp(16px, 5vw, 24px);
-  padding: clamp(20px, 6vw, 32px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-.loading-text {
-  text-align: center;
-  color: #aaa;
-  margin: 20px 0;
-  font-size: 1.1rem;
-}
-
-/* Навигация */
-.nav {
-  display: flex;
-  gap: clamp(6px, 2vw, 12px);
-  justify-content: center;
-  flex-wrap: wrap;
-  padding: clamp(12px, 4vw, 20px);
-  background: #000;
-  margin-top: auto;
-}
-
-.nav button {
-  background: #222;
-  color: #ddd;
-  border: 1px solid #444;
-  padding: clamp(8px, 2.5vw, 14px) clamp(16px, 4vw, 24px);
-  border-radius: 10px;
-  cursor: pointer;
-  font-size: clamp(0.9rem, 2.8vw, 1.1rem);
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-
-.nav button:hover:not(.active) {
-  background: #333;
-}
-
-.nav button.active {
-  background: #0d6efd;
-  color: white;
-  border-color: #0d6efd;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
-}
-
-/* Адаптация для десктопа: центрирование и ограничение ширины */
-@media (min-width: 768px) {
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    /* Укажите правильное название вашего файла */
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+                url('/assets/fone.webp') no-repeat center center fixed;
+    background-size: cover;
+    min-height: 100vh;
+  }
+  
+  /* 2. Контейнер приложения */
   .app-container {
-    align-items: center;
-    /* background: linear-gradient(135deg, #0f0c29, #302b63, #24243e); */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: transparent !important; /* Убираем черный фон */
+    color: white;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
-
-  .header,
-  .card,
-  .nav {
-    width: min(90%, 600px);
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .nav {
-    position: sticky;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.85);
+  
+  /* 3. Заголовок (делаем прозрачным) */
+  .header {
+    padding: clamp(16px, 5vw, 24px);
+    background: rgba(0, 0, 0, 0.4) !important;
     backdrop-filter: blur(10px);
-    border-top: 1px solid #333;
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   }
-}
-
-/* Убираем скроллбар на мобильных (если нужно) */
-* {
-  scrollbar-width: none; /* Firefox */
-}
-*::-webkit-scrollbar {
-  display: none; /* Chrome/Safari */
-}
-</style>
+  
+  .header h1 {
+    text-align: center;
+    margin: 0;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 700;
+    color: white;
+  }
+  
+  /* 4. Универсальная карточка с эффектом стекла */
+  /* Эти стили применятся ко всем карточкам во всех View (Admin, Staff, Client) */
+  .card, .tab, .audit-item-new, .transaction-card, .notification-item, .gift-item {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 16px;
+    margin: clamp(10px, 3vw, 20px);
+    padding: clamp(15px, 5vw, 25px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* 5. Навигация */
+  .nav {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.5) !important;
+    backdrop-filter: blur(10px);
+    margin-top: auto;
+  }
+  
+  .nav button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  
+  .nav button.active {
+    background: #4dabf7 !important;
+    border-color: #4dabf7;
+  }
+  
+  .loading-text {
+    text-align: center;
+    color: #eee;
+    margin: 20px 0;
+  }
+  </style>

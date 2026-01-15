@@ -346,9 +346,8 @@
 import { ref, onBeforeUnmount, onMounted, computed } from 'vue'
 
 const isScanning = ref(false)
-const qrScanner = ref(null) // будет содержать экземпляр сканера
-// let codeReader = null
-// Добавьте это в секцию methods вашего Vue компонента
+const qrScanner = ref(null) 
+
 const getAuditStyle = (log) => {
   if (log.type === 'notification_created' || log.type === 'gift_created') {
     return { icon: '✨', color: '#52c41a', label: 'Создание' };
@@ -621,13 +620,12 @@ const scanQR = async () => {
     }
     container.style.display = 'block'
 
-    // ⚠️ НЕ указываем supportedScanTypes — пусть библиотека решает сама
     const config = {
       fps: 10,
       qrbox: { width: 250, height: 250 },
       rememberLastUsedCamera: true,
       useBarCodeDetectorIfSupported: false,
-      formatsToSupport: ['QR_CODE'] // можно оставить, если нужно
+      formatsToSupport: ['QR_CODE']
     }
 
     const onScanSuccess = (decodedText) => {
@@ -654,6 +652,7 @@ const scanQR = async () => {
     if (container) container.style.display = 'none'
   }
 }
+
 const stopHtml5QrScanner = () => {
   if (qrScanner.value) {
     qrScanner.value.clear()
@@ -921,7 +920,7 @@ const sendBroadcast = async () => {
       title: broadcast.value.title,
       message: broadcast.value.message,
       link: broadcast.value.link,
-      image_url: broadcast.value.image_url // ← отправляем изображение
+      image_url: broadcast.value.image_url
     }
 
     const res = await fetch(`${window.API_BASE}/api/admin/broadcast`, {
@@ -945,7 +944,6 @@ const sendBroadcast = async () => {
 </script>
 
 <style scoped>
-/* Общие стили — такие же, как в StaffView.vue */
 .header h1 {
   color: white;
   text-align: center;
@@ -1026,9 +1024,11 @@ const sendBroadcast = async () => {
   font-size: 16px;
   font-weight: 600;
 }
+
 .btn-scan:hover {
   background: #157347;
 }
+
 .client-result {
   background: #222;
   padding: 16px;
@@ -1200,7 +1200,6 @@ const sendBroadcast = async () => {
   align-self: center;
 }
 
-/* Новые стили для Аудита */
 .audit-item-new {
   display: flex;
   gap: 12px;
@@ -1270,7 +1269,7 @@ const sendBroadcast = async () => {
   display: flex;
   gap: 15px;
   padding: 16px;
-  background: #1e1e1e; /* Темный фон под стать всему приложению */
+  background: #1e1e1e; 
   border-radius: 12px;
   margin-bottom: 12px;
   border-left: 4px solid transparent;
@@ -1331,7 +1330,7 @@ const sendBroadcast = async () => {
   display: flex;
   gap: 8px;
   margin-bottom: 15px;
-  overflow-x: auto; /* Чтобы на телефонах можно было скроллить фильтры */
+  overflow-x: auto;
   padding-bottom: 5px;
 }
 
