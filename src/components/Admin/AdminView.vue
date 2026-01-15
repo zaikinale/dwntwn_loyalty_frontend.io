@@ -984,7 +984,7 @@ const sendBroadcast = async () => {
 .card {
   background: #111;
   border-radius: 12px;
-  padding: 20px;
+  padding: 10px;
   margin-bottom: 20px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   color: white;
@@ -1166,7 +1166,7 @@ const sendBroadcast = async () => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 12px 0;
+  padding: 12px;
   border-bottom: 1px solid #333;
 }
 .notification-content {
