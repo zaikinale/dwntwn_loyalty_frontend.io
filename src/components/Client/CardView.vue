@@ -120,6 +120,11 @@ const onImageError = (event) => {
 
 .card h3 { margin: 0 0 16px 0; font-size: 1.1rem; }
 
+.card:last-child {
+  margin-bottom: 30px;
+
+}
+
 .gifts-slider {
   display: flex;
   overflow-x: auto;
