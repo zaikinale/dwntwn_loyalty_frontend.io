@@ -228,6 +228,7 @@ onMounted(() => {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    margin: 0 !important;
   }
   
   .header h1 {
@@ -236,6 +237,23 @@ onMounted(() => {
     font-size: clamp(1.5rem, 4vw, 2.2rem);
     font-weight: 700;
     color: white;
+  }
+
+  .sub-head {
+    padding: clamp(16px, 5vw, 24px);
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    margin: 0 !important;
+  }
+  .sub-head h1 {
+    text-align: center;
+    margin: 0;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+    font-weight: 700;
+    color: white;
+    padding: 0 !important;
   }
   
   /* 4. Универсальная карточка с эффектом стекла */
