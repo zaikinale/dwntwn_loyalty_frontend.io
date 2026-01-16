@@ -183,6 +183,21 @@
   <!-- Подарки -->
   <div v-if="activeTab === 'gifts'" class="tab active">
     <div class="card">
+      <h3>Добавить подарок</h3>
+      <div class="form-group">
+        <input v-model="newGift.name" placeholder="Название" />
+      </div>
+      <div class="form-group">
+        <input v-model.number="newGift.points" type="number" placeholder="Стоимость в баллах" min="1" />
+      </div>
+      <div class="form-group">
+        <input v-model="newGift.image_url" placeholder="Ссылка на фото (необязательно)" />
+      </div>
+      <button @click="addGift" class="btn" :disabled="loading || !newGift.name.trim() || !newGift.points">
+        {{ loading ? 'Создание...' : 'Добавить подарок' }}
+      </button>
+    </div>
+    <div class="card">
       <h3>Текущие подарки</h3>
       <div v-if="gifts.length > 0">
         <div v-for="gift in gifts" :key="gift.id" class="gift-item">
@@ -197,21 +212,6 @@
         </div>
       </div>
       <div v-else>Нет подарков</div>
-    </div>
-    <div class="card">
-      <h3>Добавить подарок</h3>
-      <div class="form-group">
-        <input v-model="newGift.name" placeholder="Название" />
-      </div>
-      <div class="form-group">
-        <input v-model.number="newGift.points" type="number" placeholder="Стоимость в баллах" min="1" />
-      </div>
-      <div class="form-group">
-        <input v-model="newGift.image_url" placeholder="Ссылка на фото (необязательно)" />
-      </div>
-      <button @click="addGift" class="btn" :disabled="loading || !newGift.name.trim() || !newGift.points">
-        {{ loading ? 'Создание...' : 'Добавить подарок' }}
-      </button>
     </div>
   </div>
 
@@ -1043,6 +1043,7 @@ const sendBroadcast = async () => {
   align-items: center;
   border-bottom: 1px solid #333;
   color: white;
+  padding: 5px !important;
 }
 .gift-content {
   display: flex;
@@ -1235,7 +1236,8 @@ const sendBroadcast = async () => {
 .audit-date {
   flex: 1;
   font-size: 12px;
-  color: #666;
+  color: #2a2a2a;
+  text-align: left;
 }
 
 .audit-desc {
