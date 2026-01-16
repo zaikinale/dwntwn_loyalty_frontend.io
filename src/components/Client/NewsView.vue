@@ -146,11 +146,9 @@ onMounted(loadNotifications)
   .promo-placeholder { font-size: 1.6rem; }
   
   .promo-info { 
-    width: 100%;
-    min-width: 100%; 
-    max-width: 100%; 
+    box-sizing: border-box;
+    width: 200px;
     overflow: hidden;
-    margin-right: 10px;
     display: flex;
     flex-direction: column;
     gap: 5px;
@@ -158,6 +156,8 @@ onMounted(loadNotifications)
   
   .promo-info h4 { margin: 0 0 4px 0; font-size: 1.05rem; }
   .promo-desc { 
+    width: 100%;
+    word-wrap: normal;
     margin: 0; 
     font-size: 0.85rem; 
     color: #bbb; 
