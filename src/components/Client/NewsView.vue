@@ -3,7 +3,7 @@
     <div class="content-wrapper">
       
       <div v-if="announcement" class="news-item announcement glass">
-        <div class="status-badge">Инфо</div>
+        <div class="status-badge">Объявление</div>
         <img v-if="announcement.image_url" :src="announcement.image_url" class="item-img" />
         <div class="item-body">
           <h2>{{ announcement.title }}</h2>
@@ -109,19 +109,17 @@ onMounted(loadNotifications)
     padding-left: 4px;
   }
   
-  /* ОБЪЯВЛЕНИЯ И НОВИНКИ */
   .news-item { width: 100%; position: relative; }
   .status-badge {
     position: absolute; top: 12px; right: 12px;
     background: #ff4d4f; padding: 3px 10px; border-radius: 8px;
-    font-size: 10px; font-weight: bold; z-index: 2;
+    font-size: 14px; font-weight: bold; z-index: 2;
   }
   .item-img { width: 100%; height: 210px; object-fit: cover; }
   .item-body { padding: 16px; }
   .item-body h2, .item-body h3 { margin: 0 0 8px 0; font-size: 1.3rem; }
   .item-body p { font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0; }
   
-  /* УМНОЕ СКРЫТИЕ ТЕКСТА */
   .item-body p.collapsed {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -133,11 +131,10 @@ onMounted(loadNotifications)
     background: none; border: none; color: #4dabf7;
     padding: 12px 0 0 0; font-weight: bold; font-size: 0.9rem; cursor: pointer;
   }
-  
-  /* АКЦИИ С КАРТИНКАМИ */
-  .promo-grid { display: flex; flex-direction: column; gap: 12px; }
+
+  .promo-grid { display: flex; flex-direction: column; gap: 10px; }
   .promo-card { padding: 12px; }
-  .promo-container { display: flex; align-items: center; gap: 14px; }
+  .promo-container { display: flex; align-items: center; gap: 10px; }
   
   .promo-image-wrapper {
     width: 80px; height: 80px; flex-shrink: 0;
@@ -150,7 +147,16 @@ onMounted(loadNotifications)
   
   .promo-info { flex: 1; }
   .promo-info h4 { margin: 0 0 4px 0; font-size: 1.05rem; }
-  .promo-desc { margin: 0; font-size: 0.85rem; color: #bbb; line-height: 1.3; }
+  .promo-desc { 
+    margin: 0; 
+    font-size: 0.85rem; 
+    color: #bbb; 
+    line-height: 1.3;  
+    max-width: 100%; 
+    -webkit-line-clamp: 3; 
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
   
   .bottom-padding { height: 110px; }
-  </style>
+</style>

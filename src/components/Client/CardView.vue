@@ -26,7 +26,7 @@
       </div>
       <div class="info-row">
         <span class="label">Заработано всего:</span>
-        <span class="value">{{ profile.total_earned_points }}</span>
+        <span class="value">{{ profile.total_earned_points }} баллов</span>
       </div>
     </div>
   </div>
@@ -102,7 +102,6 @@ const onImageError = (event) => {
 </script>
 
 <style scoped>
-/* Эффект стекла для всех карточек */
 .glass {
   background: rgba(255, 255, 255, 0.08) !important;
   backdrop-filter: blur(15px);
@@ -122,7 +121,6 @@ const onImageError = (event) => {
 
 .card:last-child {
   margin-bottom: 30px;
-
 }
 
 .gifts-slider {
@@ -167,6 +165,7 @@ const onImageError = (event) => {
 }
 
 .gift-image { width: 100%; height: 100%; object-fit: cover; }
+.gift-placeholder { width: 100%; height: 100%; }
 
 .lock-icon {
   position: absolute;
@@ -196,7 +195,7 @@ const onImageError = (event) => {
   font-size: 12px;
 }
 .card-info {
-  background: rgba(0, 0, 0, 0.2); /* Чуть притеняем подложку данных */
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 12px;
   padding: 12px;
   margin-top: 15px;
