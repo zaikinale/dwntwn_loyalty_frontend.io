@@ -165,7 +165,13 @@ const onImageError = (event) => {
 }
 
 .gift-image { width: 100%; height: 100%; object-fit: cover; }
-.gift-placeholder { min-width: 100%; min-height: 100%; }
+.gift-placeholder { 
+  min-width: 100%; 
+  min-height: 100%; 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
 .lock-icon {
   position: absolute;
