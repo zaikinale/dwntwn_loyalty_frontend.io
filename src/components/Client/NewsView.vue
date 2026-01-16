@@ -80,7 +80,7 @@ onMounted(loadNotifications)
 <style scoped>
   .news-page {
     min-height: 100vh;
-    padding: 16px;
+    /* padding: 16px; */
     color: white;
     background: transparent;
   }
