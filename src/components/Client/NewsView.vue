@@ -145,7 +145,10 @@ onMounted(loadNotifications)
   .promo-img { width: 100%; height: 100%; object-fit: cover; }
   .promo-placeholder { font-size: 1.6rem; }
   
-  .promo-info { flex: 1; }
+  .promo-info { 
+    flex: 1; 
+    max-width: 100%; 
+  }
   .promo-info h4 { margin: 0 0 4px 0; font-size: 1.05rem; }
   .promo-desc { 
     margin: 0; 
