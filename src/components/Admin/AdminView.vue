@@ -8,13 +8,13 @@
         @change="switchTab($event.target.value)" 
         class="admin-select"
       >
-        <option value="staff-mode">💼 Рабочее место</option>
-        <option value="staff">👥 Персонал</option>
-        <option value="notifications">📢 Новости</option>
-        <option value="gifts">🎁 Подарки</option>
-        <option value="history">📜 История</option>
-        <option value="audit">🔍 Аудит</option>
-        <option value="broadcast">✉️ Рассылка</option>
+        <option value="staff-mode">Рабочее место</option>
+        <option value="staff">Персонал</option>
+        <option value="notifications">Новости</option>
+        <option value="gifts">Подарки</option>
+        <option value="history">История</option>
+        <option value="audit">Аудит</option>
+        <option value="broadcast">Рассылка</option>
       </select>
     </div>
   </div>
@@ -60,7 +60,7 @@
           <select v-model="selectedGift">
             <option value="">Выберите подарок</option>
             <option v-for="g in giftsForRedeem" :key="g.id" :value="g.id">
-              {{ g.name }} ({{ g.points_cost }} баллов)
+              {{ g.name }} ({{ g.points_cost }} б)
             </option>
           </select>
           <button @click="redeemGift" :disabled="loading || !selectedGift">
@@ -74,6 +74,31 @@
   <!-- Персонал -->
   <div v-if="activeTab === 'staff'" class="tab active">
     <div class="card">
+      <div class="card-head">
+        <h3>Добавить сотрудника</h3>
+        <button class="expandable-btn" @click="isFormExpanded = !isFormExpanded">
+          {{ isFormExpanded ? 'Свернуть' : 'Форма →' }}
+        </button>
+      </div>
+      <div v-if="isFormExpanded" class="form-expandable">
+        <div class="form-group">
+          <input v-model.number="newStaff.telegram_id" type="number" placeholder="Telegram ID" />
+        </div>
+        <div class="form-group">
+          <input v-model="newStaff.name" placeholder="ФИО" />
+        </div>
+        <div class="form-group">
+          <select v-model="newStaff.role">
+            <option value="staff">Сотрудник</option>
+            <option value="admin">Админ</option>
+          </select>
+        </div>
+        <button @click="addStaff" class="btn" :disabled="!newStaff.telegram_id || !newStaff.name.trim()">
+          Добавить
+        </button>
+      </div>
+    </div>
+    <div class="card">
       <h3>Сотрудники</h3>
       <div v-if="staffList.length === 0" class="empty">Нет сотрудников</div>
       <div v-for="s in staffList" :key="s.id" class="staff-item">
@@ -81,24 +106,6 @@
         <button v-if="s.role !== 'admin'" @click="removeStaff(s.id)" class="btn-delete">Удалить</button>
         <span v-else class="admin-tag">Админ</span>
       </div>
-    </div>
-    <div class="card">
-      <h3>Добавить сотрудника</h3>
-      <div class="form-group">
-        <input v-model.number="newStaff.telegram_id" type="number" placeholder="Telegram ID" />
-      </div>
-      <div class="form-group">
-        <input v-model="newStaff.name" placeholder="ФИО" />
-      </div>
-      <div class="form-group">
-        <select v-model="newStaff.role">
-          <option value="staff">Сотрудник</option>
-          <option value="admin">Админ</option>
-        </select>
-      </div>
-      <button @click="addStaff" class="btn" :disabled="!newStaff.telegram_id || !newStaff.name.trim()">
-        Добавить
-      </button>
     </div>
     <div class="card">
       <h3>Клиенты (для выбора)</h3>
@@ -117,7 +124,13 @@
 <div v-if="activeTab === 'notifications'" class="tab active">
   <!-- Форма добавления -->
   <div class="card">
-    <h3>Добавить новость</h3>
+    <div class="card-head">
+      <h3>Добавить новость</h3>
+      <button class="expandable-btn" @click="isFormExpanded = !isFormExpanded">
+        {{ isFormExpanded ? 'Свернуть' : 'Форма →' }}
+      </button>
+    </div>
+    <div v-if="isFormExpanded" class="form-expandable">
     <div class="form-group">
       <select v-model="newNotification.type">
         <option value="promotion">Акция</option>
@@ -138,8 +151,9 @@
       <input v-model.number="newNotification.days" type="number" placeholder="Дней действия" min="1" />
     </div>
     <button @click="addNotification" class="btn" :disabled="loading">
-      {{ loading ? 'Создание...' : 'Добавить в новости' }}
+      {{ loading ? 'Создание...' : 'Добавить' }}
     </button>
+    </div>
   </div>
 
   <!-- Текущие уведомления -->
@@ -193,7 +207,13 @@
   <!-- Подарки -->
   <div v-if="activeTab === 'gifts'" class="tab active">
     <div class="card">
-      <h3>Добавить подарок</h3>
+      <div class="card-head">
+        <h3>Добавить подарок</h3>
+        <button class="expandable-btn" @click="isFormExpanded = !isFormExpanded">
+          {{ isFormExpanded ? 'Свернуть' : 'Форма →' }}
+        </button>
+      </div>
+      <div v-if="isFormExpanded" class="form-expandable">
       <div class="form-group">
         <input v-model="newGift.name" placeholder="Название" />
       </div>
@@ -204,8 +224,9 @@
         <input v-model="newGift.image_url" placeholder="Ссылка на фото (необязательно)" />
       </div>
       <button @click="addGift" class="btn" :disabled="loading || !newGift.name.trim() || !newGift.points">
-        {{ loading ? 'Создание...' : 'Добавить подарок' }}
+        {{ loading ? 'Создание...' : 'Добавить' }}
       </button>
+      </div>
     </div>
     <div class="card">
       <h3>Текущие подарки</h3>
@@ -215,7 +236,7 @@
             <img v-if="gift.image_url" :src="gift.image_url" class="gift-image" />
             <div class="gift-desc">
               <span>{{ gift.name }}</span>
-              <span>{{ gift.points_cost }} баллов</span>
+              <span>{{ gift.points_cost }} б</span>
             </div>
           </div>
           <button @click="deleteGift(gift.id)" class="btn-delete">Удалить</button>
@@ -300,7 +321,7 @@
       <input v-model="broadcast.link" placeholder="Ссылка (необязательно)" />
     </div>
     <button @click="sendBroadcast" :disabled="loading || !broadcast.title.trim() || !broadcast.message.trim()" class="btn">
-      {{ loading ? 'Отправка...' : 'Отправить рассылку' }}
+      {{ loading ? 'Отправка...' : 'Отправить' }}
     </button>
     <div v-if="broadcastResult" class="broadcast-result">
       <p>✅ Отправлено: {{ broadcastResult.sent_to }} из {{ broadcastResult.total }}</p>
@@ -315,6 +336,7 @@ import { ref, onBeforeUnmount, onMounted, computed } from 'vue'
 
 const isScanning = ref(false)
 const qrScanner = ref(null) 
+const isFormExpanded = ref(false)
 
 const getAuditStyle = (log) => {
   if (log.type === 'notification_created' || log.type === 'gift_created') {
@@ -714,6 +736,7 @@ const addStaff = async () => {
     if (res.ok) {
       newStaff.value = { telegram_id: null, name: '', role: 'staff' }
       await loadStaffAndClients()
+      isFormExpanded.value = false
     } else {
       const err = await res.json()
       errorMessage.value = err.detail || "Не удалось добавить сотрудника"
@@ -769,6 +792,7 @@ const addNotification = async () => {
     if (res.ok) {
       newNotification.value = { type: 'promotion', title: '', description: '', image_url: '', days: 7 }
       loadAuditLogs()
+      isFormExpanded.value = false
     } else {
       const err = await res.json()
       errorMessage.value = err.detail || "Не удалось создать уведомление"
@@ -805,6 +829,7 @@ const addGift = async () => {
       })
       gifts.value = await resGifts.json()
       loadAuditLogs()
+      isFormExpanded.value = false
     } else {
       const err = await res.json()
       errorMessage.value = err.detail || "Не удалось добавить подарок"
@@ -895,6 +920,18 @@ const sendBroadcast = async () => {
 </script>
 
 <style scoped>
+  .card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .form-expandable {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
   .nav-container {
   padding: 16px;
   background: #111;
@@ -991,7 +1028,7 @@ const sendBroadcast = async () => {
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
-.search-btn, .search-box input {
+.search-btn, .search-box input, .expandable-btn {
   padding: 10px;
   border-radius: 6px;
   background: #222;
@@ -1101,8 +1138,8 @@ const sendBroadcast = async () => {
   gap: 8px;
 }
 .gift-image {
-  width: 80px;
-  height: 80px;
+  width: 60px;
+  height: 60px;
   object-fit: cover;
   border-radius: 4px;
 }
