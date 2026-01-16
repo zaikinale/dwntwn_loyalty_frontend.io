@@ -1,12 +1,22 @@
 <template>
-  <div class="nav" style="position:static; background:none; border:none; margin:0 !important;">
-    <button :class="{ active: activeTab === 'staff-mode' }" @click="switchTab('staff-mode')">Рабочее место</button>
-    <button :class="{ active: activeTab === 'staff' }" @click="switchTab('staff')">Персонал</button>
-    <button :class="{ active: activeTab === 'notifications' }" @click="switchTab('notifications')">Новости</button>
-    <button :class="{ active: activeTab === 'gifts' }" @click="switchTab('gifts')">Подарки</button>
-    <button :class="{ active: activeTab === 'history' }" @click="switchTab('history')">История</button>
-    <button :class="{ active: activeTab === 'audit' }" @click="switchTab('audit')">Аудит</button>
-    <button :class="{ active: activeTab === 'broadcast' }" @click="switchTab('broadcast')">Рассылка</button>
+  <div class="nav-container">
+    <div class="select-wrapper">
+      <label for="admin-nav" class="select-label">Раздел панели:</label>
+      <select 
+        id="admin-nav" 
+        v-model="activeTab" 
+        @change="switchTab($event.target.value)" 
+        class="admin-select"
+      >
+        <option value="staff-mode">💼 Рабочее место</option>
+        <option value="staff">👥 Персонал</option>
+        <option value="notifications">📢 Новости</option>
+        <option value="gifts">🎁 Подарки</option>
+        <option value="history">📜 История</option>
+        <option value="audit">🔍 Аудит</option>
+        <option value="broadcast">✉️ Рассылка</option>
+      </select>
+    </div>
   </div>
 
   <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
@@ -885,6 +895,46 @@ const sendBroadcast = async () => {
 </script>
 
 <style scoped>
+  .nav-container {
+  padding: 16px;
+  background: #111;
+  margin-bottom: 8px;
+}
+
+.select-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.select-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
+
+.admin-select {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  background: #222;
+  color: white;
+  border: 1px solid #333;
+  border-radius: 10px;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  cursor: pointer;
+}
+
+.admin-select:focus {
+  outline: none;
+  border-color: #0d6efd;
+}
 .header h1 {
   color: white;
   text-align: center;
