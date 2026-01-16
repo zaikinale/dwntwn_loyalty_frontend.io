@@ -150,6 +150,7 @@ onMounted(loadNotifications)
     min-width: 100%; 
     max-width: 100%; 
     overflow: hidden;
+    margin-left: 10px;
   }
   .promo-info h4 { margin: 0 0 4px 0; font-size: 1.05rem; }
   .promo-desc { 
