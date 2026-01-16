@@ -1066,8 +1066,8 @@ const sendBroadcast = async () => {
   font-size: 12px;
   color: #aaa;
   position: absolute;
-  right: 15px;
-  top: 15px;
+  right: 10px;
+  top: 10px;
 }
 .empty {
   text-align: center;
@@ -1120,8 +1120,8 @@ const sendBroadcast = async () => {
 }
 .btn-delete-notific {
   position: absolute;
-  top: 15px;
-  right: 15px;
+  top: 10px;
+  right: 10px;
 }
 
 .btn-delete, .btn-delete-notific {

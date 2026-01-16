@@ -155,6 +155,7 @@ onMounted(loadNotifications)
     flex-direction: column;
     gap: 5px;
   }
+  
   .promo-info h4 { margin: 0 0 4px 0; font-size: 1.05rem; }
   .promo-desc { 
     margin: 0; 
