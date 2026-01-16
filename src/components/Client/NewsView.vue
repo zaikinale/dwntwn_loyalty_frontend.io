@@ -9,7 +9,7 @@
           <h2>{{ announcement.title }}</h2>
           <p :class="{ 'collapsed': expandedId !== 'ann' }">{{ announcement.description }}</p>
           <button v-if="announcement.description.length > 80" class="btn-more" @click="toggleExpand('ann')">
-            {{ expandedId === 'ann' ? 'Свернуть' : 'Подробнее' }}
+            {{ expandedId === 'ann' ? '⭠ Свернуть' : 'Подробнее ⭢' }}
           </button>
         </div>
       </div>
@@ -21,7 +21,7 @@
           <h3>{{ item.title }}</h3>
           <p :class="{ 'collapsed': expandedId !== 'nov-' + item.id }">{{ item.description }}</p>
           <button v-if="item.description.length > 70" class="btn-more" @click="toggleExpand('nov-' + item.id)">
-            {{ expandedId === 'nov-' + item.id ? 'Свернуть' : 'Подробнее' }}
+            {{ expandedId === 'nov-' + item.id ? '⭠ Свернуть' : 'Подробнее ⭢' }}
           </button>
         </div>
       </div>

@@ -188,7 +188,10 @@
         <div v-for="gift in gifts" :key="gift.id" class="gift-item">
           <div class="gift-content">
             <img v-if="gift.image_url" :src="gift.image_url" class="gift-image" />
-            <span>{{ gift.name }} — {{ gift.points_cost }} баллов</span>
+            <div class="gift-desc">
+              <span>{{ gift.name }}</span>
+              <span>{{ gift.points_cost }} баллов</span>
+            </div>
           </div>
           <button @click="deleteGift(gift.id)" class="btn-delete">Удалить</button>
         </div>
@@ -231,13 +234,14 @@
     </div>
   </div>
 
-  <!-- Аудит --><div v-if="activeTab === 'audit'" class="tab active">
+  <!-- Аудит -->
+  <div v-if="activeTab === 'audit'" class="tab active">
   
   <div class="audit-filters">
     <button :class="{ active: auditFilter === 'all' }" @click="auditFilter = 'all'">Все</button>
-    <button :class="{ active: auditFilter === 'creation' }" @click="auditFilter = 'creation'">✨ Создание</button>
-    <button :class="{ active: auditFilter === 'deletion' }" @click="auditFilter = 'deletion'">🗑 Удаление</button>
-    <button :class="{ active: auditFilter === 'broadcast' }" @click="auditFilter = 'broadcast'">📢 Рассылки</button>
+    <button :class="{ active: auditFilter === 'creation' }" @click="auditFilter = 'creation'">Создание</button>
+    <button :class="{ active: auditFilter === 'deletion' }" @click="auditFilter = 'deletion'">Удаление</button>
+    <button :class="{ active: auditFilter === 'broadcast' }" @click="auditFilter = 'broadcast'">Рассылки</button>
   </div>
 
   <div v-for="log in filteredAuditLogs" :key="log.id" class="audit-item-new" 
@@ -1037,7 +1041,6 @@ const sendBroadcast = async () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
   border-bottom: 1px solid #333;
   color: white;
 }
@@ -1047,11 +1050,18 @@ const sendBroadcast = async () => {
   gap: 8px;
 }
 .gift-image {
-  width: 40px;
-  height: 40px;
+  width: 80px;
+  height: 80px;
   object-fit: cover;
   border-radius: 4px;
 }
+
+.gift-desc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
 .transaction-item,
 .audit-item {
   padding: 12px 0;
@@ -1135,16 +1145,6 @@ const sendBroadcast = async () => {
   align-self: center;
 }
 
-.audit-item-new {
-  display: flex;
-  gap: 12px;
-  padding: 16px;
-  background: #1a1a1a !important;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  border-left: 4px solid transparent;
-}
-
 .audit-badge {
   width: 40px;
   height: 40px;
@@ -1157,12 +1157,6 @@ const sendBroadcast = async () => {
 }
 
 .audit-info { flex: 1; }
-
-.audit-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-}
 
 .audit-label {
   font-size: 11px;
@@ -1200,8 +1194,8 @@ const sendBroadcast = async () => {
 
 .audit-item-new {
   display: flex;
-  gap: 15px;
-  padding: 16px;
+  gap: 10px;
+  padding: 12px;
   background: #1e1e1e; 
   border-radius: 12px;
   margin-bottom: 12px;
@@ -1239,6 +1233,7 @@ const sendBroadcast = async () => {
 }
 
 .audit-date {
+  flex: 1;
   font-size: 12px;
   color: #666;
 }
