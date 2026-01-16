@@ -133,8 +133,8 @@ onMounted(loadNotifications)
   }
 
   .promo-grid { display: flex; flex-direction: column; gap: 10px; }
-  .promo-card { padding: 12px; }
-  .promo-container { display: flex; align-items: center; gap: 10px; }
+  .promo-card { padding: 12px; width: 100%;}
+  .promo-container { display: flex; align-items: center; gap: 10px; width: 100%;}
   
   .promo-image-wrapper {
     width: 80px; height: 80px; flex-shrink: 0;
