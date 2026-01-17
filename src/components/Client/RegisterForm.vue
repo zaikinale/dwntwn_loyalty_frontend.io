@@ -37,6 +37,7 @@
     <div class="form-group consent-section">
       <label class="consent-label">
         <input
+          class="consent-btn"
           type="checkbox"
           v-model="consentGiven"
           required
@@ -122,7 +123,7 @@ const MODALS = {
 
       <p><strong>6. Выход из программы</strong><br>Вы можете покинуть программу в любой момент. Все данные (бонусы, история, профиль) будут удалены без возможности восстановления. Повторная регистрация разрешена.</p>
 
-      <p><strong>7. Изменение правил</strong><br>Мы можем обновлять правила. Изменения вступают в силу через 10 дней после уведомления в Telegram-боте @dwntwn_coffee_support_bot.</p>
+      <p><strong>7. Изменение правил</strong><br>Мы можем обновлять правила. Изменения вступают в силу через 10 дней после уведомления в Telegram-боте @dwntwn_coffee_bot.</p>
     `
   },
   privacy: {
@@ -275,20 +276,17 @@ const submit = async () => {
   cursor: not-allowed;
 }
 
-/* Согласие */
 .consent-section {
   margin-top: 16px;
   font-size: 13px;
 }
 .consent-label {
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  gap: 4px;
   line-height: 1.4;
   color: #ccc;
 }
 .consent-label input {
-  margin-top: 4px;
   transform: scale(1.1);
 }
 .disclaimer {
@@ -416,5 +414,8 @@ const submit = async () => {
 .btn:disabled {
   background: #555;
   cursor: not-allowed;
+}
+.consent-btn {
+  width: 20px !important;
 }
 </style>
