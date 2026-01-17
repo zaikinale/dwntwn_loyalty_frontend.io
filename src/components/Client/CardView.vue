@@ -280,9 +280,6 @@ const onImageError = (event) => {
 
 .qr-wrapper { background: white; padding: 12px; border-radius: 12px; display: inline-block; }
 .qr-container { text-align: center; }
-/* .card-info { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; margin-top: 15px; } */
-/* .info-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; } */
-/* .label { color: #999; } */
 .info-toggle-btn, .history-toggle-btn {
   background: none;
   border: none;
@@ -297,7 +294,6 @@ const onImageError = (event) => {
 }
 
 .info-toggle-btn {
-
   width: 100%;
 }
 

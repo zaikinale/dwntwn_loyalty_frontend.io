@@ -238,7 +238,6 @@ const leaveLoyaltyProgram = async () => {
 }
 .toggle-btn:hover {
   color: #1a8cff;
-  text-decoration: underline;
 }
 .rules-content {
   font-size: 14px;
