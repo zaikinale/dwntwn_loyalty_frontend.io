@@ -15,6 +15,7 @@
         <div v-else class="qr-placeholder">Загрузка...</div>
       </div>
     </div>
+
     <button class="info-toggle-btn" @click="showCardInfo = !showCardInfo">
       {{ showCardInfo ? 'Скрыть' : 'Информация' }}
     </button>
@@ -84,8 +85,9 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import QrcodeVue from 'qrcode.vue'
+
 const showCardInfo = ref(false)
 
 const props = defineProps({
@@ -259,9 +261,9 @@ const onImageError = (event) => {
 
 .qr-wrapper { background: white; padding: 12px; border-radius: 12px; display: inline-block; }
 .qr-container { text-align: center; }
-.card-info { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; margin-top: 15px; }
-.info-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; }
-.label { color: #999; }
+/* .card-info { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; margin-top: 15px; } */
+/* .info-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; } */
+/* .label { color: #999; } */
 .info-toggle-btn {
   background: none;
   border: none;
