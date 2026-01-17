@@ -1012,18 +1012,22 @@ const sendBroadcast = async () => {
   font-weight: 500;
   border: none !important;
 }
+
 .card {
+  width: 100%;
   background: #111;
   padding: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   color: white;
 }
+
 .card h3, .card-head h3 {
   margin-top: 0;
   color: white;
 }
 
 .search-box {
+  width: 100%;
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
@@ -1134,6 +1138,7 @@ const sendBroadcast = async () => {
   padding: 5px !important;
 }
 .gift-content {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -1326,6 +1331,7 @@ const sendBroadcast = async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 4px;
+  gap: 5px;
 }
 
 .audit-type {
