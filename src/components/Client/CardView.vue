@@ -71,7 +71,7 @@
     <div class="card-head">
       <h3>История операций</h3> 
 
-      <button class="info-toggle-btn" @click="showHistoryInfo = !showHistoryInfo">
+      <button class="history-toggle-btn" @click="showHistoryInfo = !showHistoryInfo">
         {{ showHistoryInfo ? '←' : '→' }}
       </button>
     </div>
@@ -79,8 +79,8 @@
     <div v-else class="transaction-list">
       <div v-for="t in transactions" :key="t.id" class="transaction-item">
         <div class="tx-main">
-           <div :class="t.points_change > 0 ? 'points-positive' : 'points-negative'">
-            {{ t.points_change > 0 ? '+' : '' }}{{ t.points_change }}
+          <div :class="t.points_change > 0 ? 'points-positive' : 'points-negative'">
+            {{ t.points_change > 0 ? '+' : '-' }}{{ t.points_change }}
           </div>
           <div class="tx-desc">{{ t.description }}</div>
         </div>
@@ -283,7 +283,7 @@ const onImageError = (event) => {
 /* .card-info { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 12px; margin-top: 15px; } */
 /* .info-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px; } */
 /* .label { color: #999; } */
-.info-toggle-btn {
+.info-toggle-btn, .history-toggle-btn {
   background: none;
   border: none;
   color: #4da6ff;
@@ -292,12 +292,16 @@ const onImageError = (event) => {
   cursor: pointer;
   padding: 8px;
   text-align: center;
-  width: 100%;
   border-radius: 6px;
   transition: background 0.2s;
 }
-.info-toggle-btn:hover {
+
+.info-toggle-btn {
+
+  width: 100%;
+}
+
+.info-toggle-btn:hover, .history-toggle-btn:hover {
   color: #1a8cff;
-  background: rgba(77, 166, 255, 0.1);
 }
 </style>
