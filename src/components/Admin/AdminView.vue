@@ -180,7 +180,7 @@
         <div class="notification-content">
           <h5>{{ n.title }}</h5>
           <p>{{ n.description }}</p>
-          <small>Истекает: {{ formatDateTime(n.expires_at) }}</small>
+          <small>До: {{ formatDateTime(n.expires_at) }}</small>
         </div>
         <button @click="deleteNotification(n.id)" class="btn-delete-notific">Удалить</button>
       </div>
@@ -194,7 +194,7 @@
         <div class="notification-content">
           <h5>{{ n.title }}</h5>
           <p>{{ n.description }}</p>
-          <small>Истекает: {{ formatDateTime(n.expires_at) }}</small>
+          <small>До: {{ formatDateTime(n.expires_at) }}</small>
         </div>
         <button @click="deleteNotification(n.id)" class="btn-delete-notific">Удалить</button>
       </div>
@@ -488,7 +488,7 @@ const loadCurrentNotifications = async () => {
 }
 
 const deleteNotification = async (id) => {
-  if (!confirm("Удалить уведомление? Это действие нельзя отменить.")) return
+  if (!confirm("Удалить Новость? Это действие нельзя отменить.")) return
   try {
     const res = await fetch(`${window.API_BASE}/api/admin/delete-notification`, {
       method: 'POST',
@@ -797,7 +797,7 @@ const addNotification = async () => {
       isFormExpanded.value = false
     } else {
       const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось создать уведомление"
+      errorMessage.value = err.detail || "Не удалось создать новость"
     }
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
@@ -1031,7 +1031,7 @@ const sendBroadcast = async () => {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
-  /* flex-wrap: wrap; */
+  flex-wrap: wrap;
 }
 .search-btn, .search-box input, .expandable-btn {
   padding: 10px;
@@ -1045,6 +1045,10 @@ const sendBroadcast = async () => {
 .search-box input  {
   flex: 1;
   /* min-width: 160px; */
+}
+.search-btn {
+  width: 100%;
+  margin-bottom: 16px;
 }
 
 .btn-scan {
@@ -1161,6 +1165,7 @@ const sendBroadcast = async () => {
 }
 
 .gift-desc {
+  width: 100%;
   display: flex;
   flex-direction: column;
   gap: 6px;
