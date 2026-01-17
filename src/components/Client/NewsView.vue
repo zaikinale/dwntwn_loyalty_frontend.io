@@ -7,8 +7,8 @@
         <img v-if="announcement.image_url" :src="announcement.image_url" class="item-img" />
         <div class="item-body">
           <h2>{{ announcement.title }}</h2>
-          <p :class="{ 'collapsed': expandedId !== 'ann' }">{{ announcement.description }}</p>
-          <button v-if="announcement.description.length > 80" class="btn-more" @click="toggleExpand('ann')">
+          <p v-if="expandedId === 'ann'" class="expanded-desc">{{ announcement.description }}</p>
+          <button v-if="announcement.description" class="btn-more" @click="toggleExpand('ann')">
             {{ expandedId === 'ann' ? '← Свернуть' : 'Подробнее →' }}
           </button>
         </div>
@@ -19,8 +19,8 @@
         <img v-if="item.image_url" :src="item.image_url" class="item-img" />
         <div class="item-body">
           <h3>{{ item.title }}</h3>
-          <p :class="{ 'collapsed': expandedId !== 'nov-' + item.id }">{{ item.description }}</p>
-          <button v-if="item.description.length > 70" class="btn-more" @click="toggleExpand('nov-' + item.id)">
+          <p v-if="expandedId === 'nov-' + item.id" class="expanded-desc">{{ item.description }}</p>
+          <button v-if="item.description" class="btn-more" @click="toggleExpand('nov-' + item.id)">
             {{ expandedId === 'nov-' + item.id ? '← Свернуть' : 'Подробнее →' }}
           </button>
         </div>
@@ -169,4 +169,10 @@ onMounted(loadNotifications)
   }
   
   .bottom-padding { height: 110px; }
+  .expanded-desc {
+    font-size: 0.95rem;
+    color: #ddd;
+    line-height: 1.5;
+    margin: 8px 0 0 0;
+  }
 </style>

@@ -249,7 +249,7 @@ const onImageError = (event) => {
   top: 10px;
   right: 10px;
   font-size: 11px; 
-  color: #777; 
+  color: rgba(255, 255, 255, 0.03); 
 }
 
 .qr-wrapper { background: white; padding: 12px; border-radius: 12px; display: inline-block; }
