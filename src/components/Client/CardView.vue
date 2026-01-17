@@ -17,7 +17,7 @@
     </div>
 
     <button class="info-toggle-btn" @click="showCardInfo = !showCardInfo">
-      {{ showCardInfo ? 'Скрыть' : 'Информация' }}
+      {{ showCardInfo ? '← Скрыть' : 'Информация →' }}
     </button>
 
     <div v-show="showCardInfo" class="card-info">
@@ -68,8 +68,14 @@
   </div>
 
   <div class="card glass">
-    <h3>История операций</h3>
-    <div v-if="transactions.length === 0" class="empty">Нет операций</div>
+    <div class="card-head">
+      <h3>История операций</h3> 
+
+      <button class="info-toggle-btn" @click="showHistoryInfo = !showHistoryInfo">
+        {{ showHistoryInfo ? '←' : '→' }}
+      </button>
+    </div>
+    <div v-show="showHistoryInfo" v-if="transactions.length === 0" class="empty">Нет операций</div>
     <div v-else class="transaction-list">
       <div v-for="t in transactions" :key="t.id" class="transaction-item">
         <div class="tx-main">
@@ -89,6 +95,7 @@ import { computed, ref } from 'vue'
 import QrcodeVue from 'qrcode.vue'
 
 const showCardInfo = ref(false)
+const showHistoryInfo = ref(false)
 
 const props = defineProps({
   profile: { type: Object, required: true },
@@ -122,6 +129,18 @@ const onImageError = (event) => {
   padding: 16px;
   margin: 12px;
   color: white;
+}
+
+.card-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  justify-content: space-between;
+}
+
+.card-head > h3 {
+  margin: 0 !important;
 }
 
 .card h3 { margin: 0 0 16px 0; font-size: 1.1rem; }
@@ -271,9 +290,8 @@ const onImageError = (event) => {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  padding: 8px 0;
-  margin: 12px 0 0 0;
-  text-align: left;
+  padding: 8px;
+  text-align: center;
   width: 100%;
   border-radius: 6px;
   transition: background 0.2s;
