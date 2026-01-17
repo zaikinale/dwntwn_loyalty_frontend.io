@@ -77,7 +77,7 @@
       <div class="card-head">
         <h3>Добавить сотрудника</h3>
         <button class="expandable-btn" @click="isFormExpanded = !isFormExpanded">
-          {{ isFormExpanded ? 'Свернуть' : 'Форма →' }}
+          {{ isFormExpanded ? '←' : '→' }}
         </button>
       </div>
       <div v-if="isFormExpanded" class="form-expandable">
@@ -127,7 +127,7 @@
     <div class="card-head">
       <h3>Добавить новость</h3>
       <button class="expandable-btn" @click="isFormExpanded = !isFormExpanded">
-        {{ isFormExpanded ? 'Свернуть' : 'Форма →' }}
+        {{ isFormExpanded ? '←' : '→' }}
       </button>
     </div>
     <div v-if="isFormExpanded" class="form-expandable">
@@ -210,7 +210,7 @@
       <div class="card-head">
         <h3>Добавить подарок</h3>
         <button class="expandable-btn" @click="isFormExpanded = !isFormExpanded">
-          {{ isFormExpanded ? 'Свернуть' : 'Форма →' }}
+          {{ isFormExpanded ? '←' : '→' }}
         </button>
       </div>
       <div v-if="isFormExpanded" class="form-expandable">
@@ -233,13 +233,15 @@
       <div v-if="gifts.length > 0">
         <div v-for="gift in gifts" :key="gift.id" class="gift-item">
           <div class="gift-content">
-            <img v-if="gift.image_url" :src="gift.image_url" class="gift-image" />
+            <div class="gift-control">
+              <img v-if="gift.image_url" :src="gift.image_url" class="gift-image" />
+              <button @click="deleteGift(gift.id)" class="btn-delete">Удалить</button>
+            </div>
             <div class="gift-desc">
               <span>{{ gift.name }}</span>
               <span>{{ gift.points_cost }} б</span>
             </div>
           </div>
-          <button @click="deleteGift(gift.id)" class="btn-delete">Удалить</button>
         </div>
       </div>
       <div v-else>Нет подарков</div>
@@ -1134,14 +1136,23 @@ const sendBroadcast = async () => {
 }
 .gift-content {
   display: flex;
+  flex-direction: column;
+  gap: 5px;
   align-items: center;
   gap: 8px;
 }
+
+.gift-control {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+}
+
 .gift-image {
   width: 60px;
   height: 60px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .gift-desc {
@@ -1282,8 +1293,8 @@ const sendBroadcast = async () => {
 
 .audit-item-new {
   display: flex;
-  gap: 10px;
-  padding: 12px;
+  gap: 5px;
+  padding: 6px;
   background: #1e1e1e; 
   border-radius: 12px;
   margin-bottom: 12px;
