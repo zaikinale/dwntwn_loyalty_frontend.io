@@ -58,8 +58,13 @@
     </a>
   </div>
   <div class="card">
-  <h3>Правила программы лояльности</h3>
-  <div class="rules-content">
+    <div class="card-head">
+      <h3>Правила программы лояльности</h3> 
+      <button class="toggle-btn" @click="isRulesVisible = !isRulesVisible">
+        {{ isRulesVisible ? '↑' : '↓' }}
+      </button>
+    </div>
+  <div v-show="isRulesVisible" class="rules-content">
     <p><strong>1. Участие</strong><br />Программа доступна всем гостям кофеен dwntwn. Для участия требуется регистрация через Telegram Mini App.</p>
 
     <p><strong>2. Начисление бонусов</strong><br />Бонусы начисляются за каждую оплаченную покупку в размере процента от суммы чека в зависимости от уровня вашей карты:</p>
@@ -101,6 +106,8 @@
 
 <script setup>
 import { ref } from 'vue'
+
+const isRulesVisible = ref(false)
 
 const leaveLoyaltyProgram = async () => {
   const confirmed = confirm(
@@ -147,10 +154,17 @@ const leaveLoyaltyProgram = async () => {
   margin-bottom: 20px;
   color: white;
 }
-.card h3 {
+.card-head h3, .card h3 {
   margin-bottom: 10px;
   color: white;
 }
+.card-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+} 
+
 .location-link,
 .social-link,
 .support-link {
@@ -210,5 +224,37 @@ const leaveLoyaltyProgram = async () => {
 }
 .leave-button:hover {
   background: #c62828;
+}
+.toggle-btn {
+  background: none;
+  border: none;
+  color: #4da6ff;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 6px 0;
+  margin-bottom: 12px;
+  text-align: left;
+  font-weight: 500;
+}
+.toggle-btn:hover {
+  color: #1a8cff;
+  text-decoration: underline;
+}
+.rules-content {
+  font-size: 14px;
+  line-height: 1.6;
+  color: inherit;
+}
+.rules-content p {
+  margin: 0 0 12px 0;
+}
+.rules-content ul {
+  margin: 6px 0 12px 20px;
+  padding-left: 0;
+  list-style-type: disc;
+}
+.rules-content li {
+  margin-bottom: 4px;
+  line-height: 1.5;
 }
 </style>
