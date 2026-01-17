@@ -1,7 +1,6 @@
 <template>
   <div class="nav-container">
     <div class="select-wrapper">
-      <label for="admin-nav" class="select-label">Раздел панели:</label>
       <select 
         id="admin-nav" 
         v-model="activeTab" 
@@ -24,7 +23,7 @@
     <!-- Рабочее место -->
   <div v-if="activeTab === 'staff-mode'" class="tab active">  
     <div class="card">
-      <h3>Рабочее место сотрудника</h3>
+      <h3>Рабочее место</h3>
       <div class="search-box">
         <input 
           v-model="searchQuery" 
@@ -60,7 +59,7 @@
           <select v-model="selectedGift">
             <option value="">Выберите подарок</option>
             <option v-for="g in giftsForRedeem" :key="g.id" :value="g.id">
-              {{ g.name }} ({{ g.points_cost }} б)
+              {{ g.name }} ({{ g.points_cost }} баллов)
             </option>
           </select>
           <button @click="redeemGift" :disabled="loading || !selectedGift">
@@ -167,7 +166,7 @@
         <div class="notification-content">
           <h5>{{ currentNotifications.announcement.title }}</h5>
           <p>{{ currentNotifications.announcement.description }}</p>
-          <small>Истекает: {{ formatDateTime(currentNotifications.announcement.expires_at) }}</small>
+          <small>До: {{ formatDateTime(currentNotifications.announcement.expires_at) }}</small>
         </div>
         <button @click="deleteNotification(currentNotifications.announcement.id)" class="btn-delete-notific">Удалить</button>
       </div>
@@ -239,7 +238,7 @@
             </div>
             <div class="gift-desc">
               <span>{{ gift.name }}</span>
-              <span>{{ gift.points_cost }} б</span>
+              <span>{{ gift.points_cost }} баллов</span>
             </div>
           </div>
         </div>
@@ -309,7 +308,7 @@
   <!-- Пуш-рассылка -->
   <div v-if="activeTab === 'broadcast'" class="tab active">
   <div class="card">
-    <h3>Рассылка пользователям:</h3>
+    <h3>Рассылка:</h3>
     <div class="form-group">
       <input v-model="broadcast.title" placeholder="Заголовок рассылки" />
     </div>
@@ -715,6 +714,7 @@ const redeemGift = async () => {
 const selectClient = (client) => {
   newStaff.value.telegram_id = client.telegram_id
   newStaff.value.name = `${client.first_name} ${client.last_name}`
+  isFormExpanded.value = false
 }
 
 const addStaff = async () => {
@@ -960,7 +960,7 @@ const sendBroadcast = async () => {
   font-size: 16px;
   background: #222;
   color: white;
-  border: 1px solid #333;
+  /* border: 1px solid #333; */
   border-radius: 10px;
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
@@ -1018,9 +1018,8 @@ const sendBroadcast = async () => {
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   color: white;
 }
-.card h3 {
+.card h3, .card-head h3 {
   margin-top: 0;
-  margin-bottom: 16px;
   color: white;
 }
 
@@ -1028,7 +1027,7 @@ const sendBroadcast = async () => {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
+  /* flex-wrap: wrap; */
 }
 .search-btn, .search-box input, .expandable-btn {
   padding: 10px;
@@ -1041,7 +1040,7 @@ const sendBroadcast = async () => {
 
 .search-box input  {
   flex: 1;
-  min-width: 180px;
+  /* min-width: 160px; */
 }
 
 .btn-scan {
@@ -1143,6 +1142,7 @@ const sendBroadcast = async () => {
 }
 
 .gift-control {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   gap: 5px;
@@ -1214,13 +1214,16 @@ const sendBroadcast = async () => {
 .notification-content h5 {
   margin: 0 0 6px;
   font-size: 16px;
-  max-width: 60%;
+  max-width: 50%;
 }
 .notification-content p {
   margin: 0 0 8px;
   color: #ccc;
   font-size: 14px;
+  max-width: 100%;
+  overflow: hidden;
 }
+
 .empty {
   text-align: center;
   color: #777;
@@ -1229,7 +1232,7 @@ const sendBroadcast = async () => {
 }
 .btn-delete-notific {
   position: absolute;
-  top: 10px;
+  top: 8px;
   right: 10px;
 }
 
@@ -1318,6 +1321,7 @@ const sendBroadcast = async () => {
 }
 
 .audit-header {
+  width: 100%;
   display: flex;
   justify-content: space-between;
   align-items: center;
