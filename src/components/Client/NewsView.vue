@@ -1,11 +1,10 @@
 <template>
   <div class="news-page">
     <div class="content-wrapper">
-      
       <div v-if="announcement" class="news-item announcement glass">
         <div class="status-badge">Объявление</div>
         <img v-if="announcement.image_url" :src="announcement.image_url" class="item-img" />
-        <div class="item-body">
+        <div class="item-body announcement-content">
           <h2>{{ announcement.title }}</h2>
           <p v-if="expandedId === 'ann'" class="expanded-desc">{{ announcement.description }}</p>
           <button v-if="announcement.description" class="btn-more" @click="toggleExpand('ann')">
@@ -78,6 +77,9 @@ const toggleExpand = (id) => {
 onMounted(loadNotifications)
 </script>
 <style scoped>
+  .announcement-content {
+    margin-top: 10px;
+  }
   .news-page {
     min-height: 100vh;
     /* padding: 16px; */
@@ -115,7 +117,7 @@ onMounted(loadNotifications)
     background: #ff4d4f; padding: 3px 10px; border-radius: 8px;
     font-size: 14px; font-weight: bold; z-index: 2;
   }
-  .item-img { width: 100%; height: 210px; object-fit: cover; }
+  .item-img { width: 100%; height: 310px; object-fit: cover; }
   .item-body { padding: 16px; }
   .item-body h2, .item-body h3 { margin: 0 0 8px 0; font-size: 1.3rem; }
   .item-body p { font-size: 0.95rem; color: #ddd; line-height: 1.5; margin: 0; }
