@@ -271,7 +271,7 @@ const onImageError = (event) => {
   top: 10px;
   right: 10px;
   font-size: 11px; 
-  background: rgba(0, 0, 0, 0.8) !important;
+  color: rgba(0, 0, 0, 0.4) !important;
 }
 
 .qr-wrapper { background: white; padding: 12px; border-radius: 12px; display: inline-block; }

@@ -217,7 +217,7 @@ onMounted(() => {
   }
 
   .card:last-child {
-    margin-bottom: 50px;
+    margin-bottom: 60px;
   }
 
   .nav {
