@@ -78,7 +78,7 @@ onMounted(loadNotifications)
 </script>
 <style scoped>
   .announcement-content {
-    margin-top: 10px;
+    margin-top: 20px;
   }
   .news-page {
     min-height: 100vh;

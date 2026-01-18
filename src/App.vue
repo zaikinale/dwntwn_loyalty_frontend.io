@@ -216,6 +216,10 @@ onMounted(() => {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
+  .card:last-child {
+    margin-bottom: 50px;
+  }
+
   .nav {
     display: flex;
     gap: 8px;

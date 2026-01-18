@@ -80,7 +80,7 @@
       <div v-for="t in transactions" :key="t.id" class="transaction-item">
         <div class="tx-main">
           <div :class="t.points_change > 0 ? 'points-positive' : 'points-negative'">
-            {{ t.points_change > 0 ? '+' : '-' }}{{ t.points_change }}
+            {{ t.points_change > 0 ? '+' : '' }}{{ t.points_change }}
           </div>
           <div class="tx-desc">{{ t.description }}</div>
         </div>
@@ -144,10 +144,6 @@ const onImageError = (event) => {
 }
 
 .card h3 { margin: 0 0 16px 0; font-size: 1.1rem; }
-
-.card:last-child {
-  margin-bottom: 30px;
-}
 
 .gifts-slider {
   display: flex;
@@ -275,7 +271,7 @@ const onImageError = (event) => {
   top: 10px;
   right: 10px;
   font-size: 11px; 
-  color: rgba(255, 255, 255, 0.03); 
+  background: rgba(0, 0, 0, 0.8) !important;
 }
 
 .qr-wrapper { background: white; padding: 12px; border-radius: 12px; display: inline-block; }
