@@ -714,7 +714,7 @@ const redeemGift = async () => {
 const selectClient = (client) => {
   newStaff.value.telegram_id = client.telegram_id
   newStaff.value.name = `${client.first_name} ${client.last_name}`
-  isFormExpanded.value = true
+  isFormExpanded.value = !isFormExpanded.value 
 }
 
 const addStaff = async () => {
