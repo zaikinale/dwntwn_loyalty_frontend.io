@@ -220,7 +220,7 @@ onMounted(() => {
     display: flex;
     gap: 8px;
     justify-content: center;
-    padding: 15px;
+    padding: 15px 15px 30px;
     background: rgba(0, 0, 0, 0.5) !important;
     backdrop-filter: blur(10px);
     margin-top: auto;

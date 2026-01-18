@@ -75,8 +75,8 @@
         {{ showHistoryInfo ? '←' : '→' }}
       </button>
     </div>
-    <div v-show="showHistoryInfo" v-if="transactions.length === 0" class="empty">Нет операций</div>
-    <div v-else class="transaction-list">
+    <div v-if="transactions.length === 0" class="empty">Нет операций</div>
+    <div v-show="showHistoryInfo" v-else class="transaction-list">
       <div v-for="t in transactions" :key="t.id" class="transaction-item">
         <div class="tx-main">
           <div :class="t.points_change > 0 ? 'points-positive' : 'points-negative'">
