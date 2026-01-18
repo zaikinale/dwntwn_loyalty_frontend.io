@@ -33,7 +33,6 @@
       <input v-model="form.email" type="email" placeholder="example@mail.ru" />
     </div>
 
-    <!-- Согласие -->
     <div class="form-group consent-section">
       <label class="consent-label">
         <input
@@ -61,7 +60,6 @@
     </button>
   </div>
 
-  <!-- Модальное окно -->
   <div v-if="modalOpen" class="modal-overlay" @click="closeModal">
     <div class="modal-content" @click.stop>
       <div class="modal-header">
@@ -75,160 +73,181 @@
     </div>
   </div>
 </template>
-
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-
-const emit = defineEmits(['registered'])
-
-const form = ref({
-  lastName: '',
-  firstName: '',
-  phone: '',
-  birthDate: '',
-  gender: '',
-  email: ''
-})
-const consentGiven = ref(false)
-const loading = ref(false)
-const modalOpen = ref(false)
-const currentModal = ref('')
-
-const isValid = computed(() => {
-  return form.value.lastName.trim() && form.value.firstName.trim()
-})
-
-// Тексты модалок
-const MODALS = {
-  rules: {
-    title: 'Правила программы лояльности',
-    content: `
-      <p><strong>1. Участие</strong><br>Программа доступна всем гостям кофеен dwntwn. Требуется регистрация через Telegram Mini App.</p>
-
-      <p><strong>2. Начисление бонусов</strong><br>Бонусы начисляются за покупки в зависимости от уровня карты:</p>
-      <ul>
-        <li>PLATINA — 10%</li>
-        <li>GOLD — 7%</li>
-        <li>SILVER — 5%</li>
-        <li>BRONZE — 3%</li>
-        <li>IRON — 1%</li>
-      </ul>
-      <p>Бонусы округляются в меньшую сторону. Бонусы ≠ рубли.</p>
-
-      <p><strong>3. Обмен бонусов</strong><br>Только на подарки из каталога «Подарки». После обмена бонусы списываются безвозвратно.</p>
-
-      <p><strong>4. Акции</strong><br>Акции не суммируются. При использовании акции бонусы не начисляются.</p>
-
-      <p><strong>5. Срок действия</strong><br>Бонусы действительны 12 месяцев с даты начисления.</p>
-
-      <p><strong>6. Выход из программы</strong><br>Вы можете покинуть программу в любой момент. Все данные (бонусы, история, профиль) будут удалены без возможности восстановления. Повторная регистрация разрешена.</p>
-
-      <p><strong>7. Изменение правил</strong><br>Мы можем обновлять правила. Изменения вступают в силу через 10 дней после уведомления в Telegram-боте @dwntwn_coffee_bot.</p>
-    `
-  },
-  privacy: {
-    title: 'Политика конфиденциальности',
-    content: `
-      <p><strong>1. Сбор данных</strong><br>Мы собираем: ФИО, телефон, email, дату рождения, пол и Telegram ID — только для работы программы лояльности.</p>
-
-      <p><strong>2. Цели обработки</strong><br>— Идентификация участника;<br>— Начисление бонусов;<br>— Управление аккаунтом.</p>
-
-      <p><strong>3. Хранение</strong><br>Данные хранятся на серверах на территории РФ.</p>
-
-      <p><strong>4. Передача третьим лицам</strong><br>Не осуществляется.</p>
-
-      <p><strong>5. Удаление данных</strong><br>При выходе из программы все персональные данные удаляются в течение 24 часов в соответствии с ФЗ-152 «О персональных данных».</p>
-
-      <p><strong>6. Отзыв согласия</strong><br>Вы можете отозвать согласие в любой момент через функцию «Покинуть программу».</p>
-
-      <p><strong>7. Безопасность</strong><br>Мы применяем технические и организационные меры для защиты ваших данных.</p>
-    `
-  }
-}
-
-const modalTitle = computed(() => MODALS[currentModal.value]?.title || '')
-const modalContent = computed(() => MODALS[currentModal.value]?.content || '')
-
-const openModal = (key) => {
-  currentModal.value = key
-  modalOpen.value = true
-}
-
-const closeModal = () => {
-  modalOpen.value = false
-  currentModal.value = ''
-}
-
-// === Остальной код регистрации (без изменений) ===
-function waitForTelegramInit(timeoutMs = 3000) {
-  return new Promise((resolve) => {
-    const start = Date.now()
-    const check = () => {
-      const tg = window.Telegram?.WebApp
-      if (tg && tg.initData !== undefined) {
-        resolve(tg.initData)
-      } else if (Date.now() - start > timeoutMs) {
-        resolve("")
-      } else {
-        setTimeout(check, 50)
-      }
-    }
-    check()
+  import { ref, computed, onMounted } from 'vue'
+  
+  const emit = defineEmits(['registered'])
+  
+  const form = ref({
+    lastName: '',
+    firstName: '',
+    phone: '',
+    birthDate: '',
+    gender: '',
+    email: ''
   })
-}
-
-onMounted(() => {
-  const tg = window.Telegram?.WebApp
-  if (tg) {
-    tg.expand()
-    tg.ready()
-    setTimeout(() => {
-      const firstInput = document.querySelector('input')
-      if (firstInput) firstInput.focus()
-    }, 400)
+  const consentGiven = ref(false)
+  const loading = ref(false)
+  const modalOpen = ref(false)
+  const currentModal = ref('')
+  
+  const isValidPhone = (phone) => {
+    const cleaned = phone.replace(/\D/g, '')
+    return cleaned.length === 11 && cleaned.startsWith('7')
   }
-})
-
-const submit = async () => {
-  loading.value = true
-  const initData = await waitForTelegramInit()
-
-  if (!initData) {
-    alert("❌ Нет данных от Telegram. Откройте приложение через бота!")
-    loading.value = false
-    return
+  
+  const isValidEmail = (email) => {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    return re.test(email)
   }
-
-  try {
-    const payload = {
-      initData,
-      first_name: form.value.firstName,
-      last_name: form.value.lastName,
-      phone: form.value.phone || null,
-      email: form.value.email || null,
-      birth_date: form.value.birthDate || null,
-      gender: form.value.gender || null
+  
+  const isAdult = (birthDate) => {
+    if (!birthDate) return false
+    const today = new Date()
+    const dob = new Date(birthDate)
+    const age = today.getFullYear() - dob.getFullYear()
+    const monthDiff = today.getMonth() - dob.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
+      return age - 1 >= 14
     }
-
-    const res = await fetch(`${window.API_BASE}/api/client/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+    return age >= 14
+  }
+  
+  const isValid = computed(() => {
+    const f = form.value
+    return (
+      f.lastName.trim().length > 0 &&
+      f.firstName.trim().length > 0 &&
+      f.gender !== '' &&
+      f.birthDate !== '' &&
+      isAdult(f.birthDate) &&
+      isValidPhone(f.phone) &&
+      isValidEmail(f.email)
+    )
+  })
+  
+  const MODALS = {
+    rules: {
+      title: 'Правила программы лояльности',
+      content: `
+        <p><strong>1. Участие</strong><br>Программа доступна всем гостям кофеен dwntwn. Требуется регистрация через Telegram Mini App.</p>
+        <p><strong>2. Начисление бонусов</strong><br>Бонусы начисляются за покупки в зависимости от уровня карты:</p>
+        <ul>
+          <li>PLATINA — 10%</li>
+          <li>GOLD — 7%</li>
+          <li>SILVER — 5%</li>
+          <li>BRONZE — 3%</li>
+          <li>IRON — 1%</li>
+        </ul>
+        <p>Бонусы округляются в меньшую сторону. Бонусы ≠ рубли.</p>
+        <p><strong>3. Обмен бонусов</strong><br>Только на подарки из каталога «Подарки». После обмена бонусы списываются безвозвратно.</p>
+        <p><strong>4. Акции</strong><br>Акции не суммируются. При использовании акции бонусы не начисляются.</p>
+        <p><strong>5. Срок действия</strong><br>Бонусы действительны 12 месяцев с даты начисления.</p>
+        <p><strong>6. Выход из программы</strong><br>Вы можете покинуть программу в любой момент. Все данные (бонусы, история, профиль) будут удалены без возможности восстановления. Повторная регистрация разрешена.</p>
+        <p><strong>7. Изменение правил</strong><br>Мы можем обновлять правила. Изменения вступают в силу через 10 дней после уведомления в Telegram-боте @dwntwn_coffee_bot.</p>
+      `
+    },
+    privacy: {
+      title: 'Политика конфиденциальности',
+      content: `
+        <p><strong>1. Сбор данных</strong><br>Мы собираем: ФИО, телефон, email, дату рождения, пол и Telegram ID — только для работы программы лояльности.</p>
+        <p><strong>2. Цели обработки</strong><br>— Идентификация участника;<br>— Начисление бонусов;<br>— Управление аккаунтом.</p>
+        <p><strong>3. Хранение</strong><br>Данные хранятся на серверах на территории РФ.</p>
+        <p><strong>4. Передача третьим лицам</strong><br>Не осуществляется.</p>
+        <p><strong>5. Удаление данных</strong><br>При выходе из программы все персональные данные удаляются в течение 24 часов в соответствии с ФЗ-152 «О персональных данных».</p>
+        <p><strong>6. Отзыв согласия</strong><br>Вы можете отозвать согласие в любой момент через функцию «Покинуть программу».</p>
+        <p><strong>7. Безопасность</strong><br>Мы применяем технические и организационные меры для защиты ваших данных.</p>
+      `
+    }
+  }
+  
+  const modalTitle = computed(() => MODALS[currentModal.value]?.title || '')
+  const modalContent = computed(() => MODALS[currentModal.value]?.content || '')
+  
+  const openModal = (key) => {
+    currentModal.value = key
+    modalOpen.value = true
+  }
+  
+  const closeModal = () => {
+    modalOpen.value = false
+    currentModal.value = ''
+  }
+  
+  function waitForTelegramInit(timeoutMs = 3000) {
+    return new Promise((resolve) => {
+      const start = Date.now()
+      const check = () => {
+        const tg = window.Telegram?.WebApp
+        if (tg && tg.initData !== undefined) {
+          resolve(tg.initData)
+        } else if (Date.now() - start > timeoutMs) {
+          resolve("")
+        } else {
+          setTimeout(check, 50)
+        }
+      }
+      check()
     })
-
-    if (res.ok) {
-      emit('registered')
-    } else {
-      const err = await res.json().catch(() => ({}))
-      alert("Ошибка регистрации: " + (err.detail || "Неизвестная ошибка"))
-    }
-  } catch (e) {
-    console.error("Registration error:", e)
-    alert("Ошибка подключения")
-  } finally {
-    loading.value = false
   }
-}
+  
+  onMounted(() => {
+    const tg = window.Telegram?.WebApp
+    if (tg) {
+      tg.expand()
+      tg.ready()
+      setTimeout(() => {
+        const firstInput = document.querySelector('input')
+        if (firstInput) firstInput.focus()
+      }, 400)
+    }
+  })
+  
+  const submit = async () => {
+    if (!isValid.value) {
+      alert('Пожалуйста, заполните все поля корректно.')
+      return
+    }
+  
+    loading.value = true
+    const initData = await waitForTelegramInit()
+  
+    if (!initData) {
+      alert("❌ Нет данных от Telegram. Откройте приложение через бота!")
+      loading.value = false
+      return
+    }
+  
+    try {
+      const payload = {
+        initData,
+        first_name: form.value.firstName.trim(),
+        last_name: form.value.lastName.trim(),
+        phone: form.value.phone.replace(/\D/g, ''),
+        email: form.value.email.trim(),
+        birth_date: form.value.birthDate,
+        gender: form.value.gender
+      }
+  
+      const res = await fetch(`${window.API_BASE}/api/client/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+  
+      if (res.ok) {
+        emit('registered')
+      } else {
+        const err = await res.json().catch(() => ({}))
+        alert("Ошибка регистрации: " + (err.detail || "Неизвестная ошибка"))
+      }
+    } catch (e) {
+      console.error("Registration error:", e)
+      alert("Ошибка подключения")
+    } finally {
+      loading.value = false
+    }
+  }
 </script>
 
 <style scoped>
@@ -298,7 +317,6 @@ const submit = async () => {
   line-height: 1.4;
 }
 
-/* Модальное окно */
 .modal-overlay {
   position: fixed;
   top: 0;
