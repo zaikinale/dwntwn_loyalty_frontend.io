@@ -209,7 +209,7 @@
   }
   .gifts-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+  grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-top: 15px;
 }
@@ -247,7 +247,6 @@
 }
 
 .gift-price-tag {
-  background: #d4af37;
   color: black;
   padding: 2px 10px;
   border-radius: 12px;
@@ -260,5 +259,9 @@
 .price-label {
   font-size: 0.7rem;
   text-transform: uppercase;
+}
+
+.gifts-catalog-section {
+  margin-bottom: 60px;
 }
 </style>
