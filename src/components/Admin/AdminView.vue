@@ -495,7 +495,7 @@ const loadCurrentNotifications = async () => {
   }
 }
 
-const cancelTx = async (txId) => {
+const canselTx = async (txId) => {
   if (!confirm('Вы уверены, что хотите отменить эту операцию? Баллы клиента будут изменены.')) return;
   
   try {
