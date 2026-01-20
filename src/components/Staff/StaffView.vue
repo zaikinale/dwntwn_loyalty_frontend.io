@@ -14,7 +14,7 @@
       <div class="search-box">
         <input
           v-model="searchQuery"
-          placeholder="Номер карты (DTLC-XXXXXX) или телефон (+7...)"
+          placeholder="(DTLC-XXXXXX)/(+7...)"
           @keyup.enter="searchClient"
         />
         <button class="search-btn" @click="searchClient" :disabled="loading">Найти</button>
