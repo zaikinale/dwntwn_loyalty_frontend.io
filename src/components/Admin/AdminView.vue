@@ -494,7 +494,6 @@ const loadCurrentNotifications = async () => {
     console.error("Ошибка загрузки уведомлений:", e)
   }
 }
-
 const canselTx = async (txId) => {
   if (!confirm('Вы уверены, что хотите отменить эту операцию? Баллы клиента будут изменены.')) return;
   
@@ -504,19 +503,29 @@ const canselTx = async (txId) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         transaction_id: txId,
-        initData: window.Telegram.WebApp.initData 
+        initData: getInitData() 
       })
     });
     
     if (response.ok) {
       alert('Операция успешно отменена');
-      this.fetchHistory(); // Обновляем список
+      
+      // Обновляем список транзакций сразу после отмены
+      const resTx = await fetch(`${window.API_BASE}/api/admin/transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      });
+      
+      if (resTx.ok) {
+        transactions.value = await resTx.json();
+      }
     } else {
       const err = await response.json();
-      alert('Ошибка: ' + err.detail);
+      alert('Ошибка: ' + (err.detail || 'Не удалось отменить'));
     }
   } catch (e) {
-    console.error(e)
+    console.error(e);
     alert('Ошибка соединения с сервером');
   }
 }
