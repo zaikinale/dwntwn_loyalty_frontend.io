@@ -604,71 +604,122 @@ const searchClient = async () => {
   }
 }
 
+// const scanQR = async () => {
+//   clearError()
+
+//   if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
+//     try {
+//       const data = await Telegram.WebApp.scanQrCode()
+//       if (data) {
+//         searchQuery.value = String(data).trim()
+//         await searchClient()
+//       }
+//     } catch (err) {
+//       errorMessage.value = "Не удалось отсканировать QR"
+//     }
+//     return
+//   }
+
+//   if (isScanning.value) {
+//     stopHtml5QrScanner()
+//     return
+//   }
+
+//   isScanning.value = true
+//   errorMessage.value = ''
+
+//   try {
+//     const { Html5QrcodeScanner } = await import('html5-qrcode')
+
+//     const container = document.getElementById('qr-reader')
+//     if (!container) {
+//       throw new Error('Контейнер #qr-reader не найден в DOM')
+//     }
+//     container.style.display = 'block'
+
+//     const config = {
+//       fps: 10,
+//       qrbox: { width: 250, height: 250 },
+//       rememberLastUsedCamera: true,
+//       useBarCodeDetectorIfSupported: false,
+//       formatsToSupport: ['QR_CODE']
+//     }
+
+//     const onScanSuccess = (decodedText) => {
+//       stopHtml5QrScanner()
+//       searchQuery.value = decodedText.trim()
+//       searchClient()
+//     }
+
+//     const onScanFailure = (error) => {
+//       if (!error?.includes('NotFoundException')) {
+//         console.warn('QR scan error:', error)
+//       }
+//     }
+
+//     qrScanner.value = new Html5QrcodeScanner('qr-reader', config, false)
+//     qrScanner.value.render(onScanSuccess, onScanFailure)
+
+//   } catch (err) {
+//     console.error('Ошибка запуска сканера:', err)
+//     const msg = err?.message || (typeof err === 'string' ? err : 'неизвестная ошибка')
+//     errorMessage.value = 'Не удалось запустить сканер: ' + msg
+//     isScanning.value = false
+//     const container = document.getElementById('qr-reader')
+//     if (container) container.style.display = 'none'
+//   }
+// }
+
 const scanQR = async () => {
-  clearError()
-
-  if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
-    try {
-      const data = await Telegram.WebApp.scanQrCode()
+  clearError();
+  
+  // 1. Пробуем родной сканер Telegram (Бесшовный)
+  if (window.Telegram?.WebApp?.showScanQrPopup) {
+    window.Telegram.WebApp.showScanQrPopup({
+      text: "Отсканируйте QR-код клиента"
+    }, (data) => {
       if (data) {
-        searchQuery.value = String(data).trim()
-        await searchClient()
+        searchQuery.value = data.trim();
+        window.Telegram.WebApp.closeScanQrPopup();
+        searchClient();
+        return true; 
       }
-    } catch (err) {
-      errorMessage.value = "Не удалось отсканировать QR"
-    }
-    return
+    });
+    return; // Выходим, если запустили нативный
   }
 
+  // 2. Фолбек: если Telegram API недоступен, запускаем старый библиотечный сканер
   if (isScanning.value) {
-    stopHtml5QrScanner()
-    return
+    stopHtml5QrScanner();
+    return;
   }
 
-  isScanning.value = true
-  errorMessage.value = ''
-
+  isScanning.value = true;
   try {
-    const { Html5QrcodeScanner } = await import('html5-qrcode')
-
-    const container = document.getElementById('qr-reader')
-    if (!container) {
-      throw new Error('Контейнер #qr-reader не найден в DOM')
-    }
-    container.style.display = 'block'
+    const { Html5QrcodeScanner } = await import('html5-qrcode');
+    const container = document.getElementById('qr-reader');
+    if (container) container.style.display = 'block';
 
     const config = {
       fps: 10,
       qrbox: { width: 250, height: 250 },
-      rememberLastUsedCamera: true,
-      useBarCodeDetectorIfSupported: false,
-      formatsToSupport: ['QR_CODE']
-    }
+      rememberLastUsedCamera: true
+    };
 
-    const onScanSuccess = (decodedText) => {
-      stopHtml5QrScanner()
-      searchQuery.value = decodedText.trim()
-      searchClient()
-    }
-
-    const onScanFailure = (error) => {
-      if (!error?.includes('NotFoundException')) {
-        console.warn('QR scan error:', error)
-      }
-    }
-
-    qrScanner.value = new Html5QrcodeScanner('qr-reader', config, false)
-    qrScanner.value.render(onScanSuccess, onScanFailure)
+    qrScanner.value = new Html5QrcodeScanner('qr-reader', config, false);
+    qrScanner.value.render((decodedText) => {
+      stopHtml5QrScanner();
+      searchQuery.value = decodedText.trim();
+      searchClient();
+    }, (error) => {
+      if (!error?.includes('NotFoundException')) console.warn(error);
+    });
 
   } catch (err) {
-    console.error('Ошибка запуска сканера:', err)
-    const msg = err?.message || (typeof err === 'string' ? err : 'неизвестная ошибка')
-    errorMessage.value = 'Не удалось запустить сканер: ' + msg
-    isScanning.value = false
-    const container = document.getElementById('qr-reader')
-    if (container) container.style.display = 'none'
+    errorMessage.value = 'Ошибка запуска запасного сканера';
+    isScanning.value = false;
   }
-}
+};
 
 const stopHtml5QrScanner = () => {
   if (qrScanner.value) {
