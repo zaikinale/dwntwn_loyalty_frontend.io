@@ -260,6 +260,13 @@
             <div class="tx-user">{{ t.client_name }}</div>
             <div class="tx-desc">{{ t.description }}</div>
           </div>
+          <button
+            v-if="!tx.description.includes('[ОТМЕНЕНА]')"
+            @click="canselTx(tx.id)"
+            class="btn-cancel-small"
+          >
+            Отменить
+          </button>
         </div>
         <div class="timestamp">{{ formatDateTime(t.created_at) }}</div>
       </div>
@@ -484,6 +491,31 @@ const loadCurrentNotifications = async () => {
   } catch (e) {
     errorMessage.value = "Ошибка загрузки уведомлений: " + (e.message || e)
     console.error("Ошибка загрузки уведомлений:", e)
+  }
+}
+
+const cancelTx = async (txId) => {
+  if (!confirm('Вы уверены, что хотите отменить эту операцию? Баллы клиента будут изменены.')) return;
+  
+  try {
+    const response = await fetch(`${this.backendUrl}/api/admin/cancel-transaction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        transaction_id: txId,
+        initData: window.Telegram.WebApp.initData 
+      })
+    });
+    
+    if (response.ok) {
+      alert('Операция успешно отменена');
+      this.fetchHistory(); // Обновляем список
+    } else {
+      const err = await response.json();
+      alert('Ошибка: ' + err.detail);
+    }
+  } catch (e) {
+    alert('Ошибка соединения с сервером');
   }
 }
 
@@ -1194,6 +1226,23 @@ const sendBroadcast = async () => {
   padding: 20px 0;
   font-style: italic;
 }
+
+.btn-cancel-small {
+  background: none;
+  border: 1px solid #dc3545;
+  color: #dc3545;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  cursor: pointer;
+  margin-left: 10px;
+  transition: 0.2s;
+}
+.btn-cancel-small:hover {
+  background: #dc3545;
+  color: white;
+}
+
 .audit-description {
   padding-bottom: 10px;
 }

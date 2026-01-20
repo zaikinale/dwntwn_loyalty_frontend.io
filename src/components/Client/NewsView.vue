@@ -40,42 +40,73 @@
           </div>
         </div>
       </div>
+      <div class="gifts-catalog-section" v-if="giftsCatalog.length">
+        <div class="section-title">🎁 Каталог подарков</div>
+        <div class="gifts-grid">
+          <div v-for="gift in giftsCatalog" :key="gift.id" class="gift-card-new glass">
+            <div class="gift-image-wrapper">
+              <img :src="gift.image_url || 'placeholder.png'" alt="gift">
+            </div>
+            <div class="gift-details">
+              <span class="gift-name">{{ gift.name }}</span>
+              <div class="gift-price-tag">
+                <span class="price-value">{{ gift.points_cost }}</span>
+                <span class="price-label">баллов</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
-      <div class="bottom-padding"></div>
     </div>
   </div>
 </template>
-
 <script setup>
-import { ref, onMounted } from 'vue'
-
-const announcement = ref(null)
-const novelties = ref([])
-const promotions = ref([])
-const expandedId = ref(null)
-
-const loadNotifications = async () => {
-  try {
-    const res = await fetch(`${window.API_BASE}/api/client/notifications`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: window.Telegram?.WebApp?.initData || '' })
-    })
-    const data = await res.json()
-    announcement.value = data.find(n => n.type === 'announcement') || null
-    novelties.value = data.filter(n => n.type === 'novelty')
-    promotions.value = data.filter(n => n.type === 'promotion')
-  } catch (e) {
-    console.error("Ошибка загрузки:", e)
+  import { ref, onMounted } from 'vue'
+  
+  const announcement = ref(null)
+  const novelties = ref([])
+  const promotions = ref([])
+  const giftsCatalog = ref([])
+  const expandedId = ref(null)
+  
+  const loadNotifications = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/client/notifications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: window.Telegram?.WebApp?.initData || '' })
+      })
+      const data = await res.json()
+      announcement.value = data.find(n => n.type === 'announcement') || null
+      novelties.value = data.filter(n => n.type === 'novelty')
+      promotions.value = data.filter(n => n.type === 'promotion')
+    } catch (e) {
+      console.error("Ошибка загрузки уведомлений:", e)
+    }
   }
-}
-
-const toggleExpand = (id) => {
-  expandedId.value = expandedId.value === id ? null : id
-}
-
-onMounted(loadNotifications)
+  
+  const fetchGiftsCatalog = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/api/public/gifts-catalog`);
+      if (response.ok) {
+        giftsCatalog.value = await response.json();
+      }
+    } catch (e) {
+      console.error("Ошибка загрузки каталога:", e);
+    }
+  }
+  
+  const toggleExpand = (id) => {
+    expandedId.value = expandedId.value === id ? null : id
+  }
+  
+  onMounted(() => {
+    loadNotifications();
+    fetchGiftsCatalog();
+  })
 </script>
+
 <style scoped>
   .announcement-content {
     margin-top: 20px;
@@ -170,11 +201,64 @@ onMounted(loadNotifications)
     overflow: hidden;
   }
   
-  .bottom-padding { height: 110px; }
   .expanded-desc {
     font-size: 0.95rem;
     color: #ddd;
     line-height: 1.5;
     margin: 8px 0 0 0;
   }
+  .gifts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* 2 колонки */
+  gap: 12px;
+  margin-top: 15px;
+}
+
+.gift-card-new {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 12px;
+  text-align: center;
+}
+
+.gift-image-wrapper {
+  width: 100%;
+  height: 120px;
+  overflow: hidden;
+}
+
+.gift-image-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gift-details {
+  padding: 8px 4px;
+}
+
+.gift-name {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: bold;
+  margin-bottom: 6px;
+  color: white;
+}
+
+.gift-price-tag {
+  background: #d4af37;
+  color: black;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  display: inline-flex;
+  gap: 3px;
+}
+
+.price-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
 </style>
