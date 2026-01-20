@@ -1,25 +1,34 @@
 <template>
   <div class="card">
-    <div style="background:#222; padding:16px; border-radius:8px; margin:20px 0; font-size:14px; color: white;">
+    <div class="info-banner">
       Для использования полного функционала необходимо зарегистрироваться
     </div>
 
     <div class="form-group">
       <label>Фамилия</label>
-      <input v-model="form.lastName" placeholder="Иванов" />
+      <input v-model="form.lastName" placeholder="Иванов" @input="v$.lastName.$touch()" />
     </div>
+    
     <div class="form-group">
       <label>Имя</label>
       <input v-model="form.firstName" placeholder="Иван" />
     </div>
+
     <div class="form-group">
       <label>Телефон</label>
-      <input v-model="form.phone" type="tel" placeholder="+7 (999) 123-45-67" />
+      <input 
+        v-model="form.phone" 
+        type="tel" 
+        placeholder="+7 (999) 123-45-67"
+        v-maska data-maska="+7 (###) ###-##-##"
+      />
     </div>
+
     <div class="form-group">
       <label>Дата рождения</label>
       <input v-model="form.birthDate" type="date" />
     </div>
+
     <div class="form-group">
       <label>Пол</label>
       <select v-model="form.gender">
@@ -28,6 +37,7 @@
         <option value="female">Женский</option>
       </select>
     </div>
+
     <div class="form-group">
       <label>Email</label>
       <input v-model="form.email" type="email" placeholder="example@mail.ru" />
@@ -35,20 +45,11 @@
 
     <div class="form-group consent-section">
       <label class="consent-label">
-        <input
-          class="consent-btn"
-          type="checkbox"
-          v-model="consentGiven"
-          required
-        />
+        <input class="consent-btn" type="checkbox" v-model="consentGiven" />
         Я принимаю 
-        <a href="#" @click.prevent="openModal('rules')">Правила программы</a>,
+        <a href="#" @click.prevent="openModal('rules')">Правила</a> и 
         <a href="#" @click.prevent="openModal('privacy')">Политику конфиденциальности</a>
-        и даю согласие на обработку персональных данных.
       </label>
-      <p class="disclaimer">
-        Разработчик не несёт ответственности за технические сбои, утрату бонусов, недоступность сервиса, а также за любые прямые или косвенные убытки, связанные с использованием программы лояльности.
-      </p>
     </div>
 
     <button
@@ -58,16 +59,18 @@
     >
       {{ loading ? 'ОТПРАВКА...' : 'ЗАРЕГИСТРИРОВАТЬСЯ' }}
     </button>
-  </div>
 
-  <div v-if="modalOpen" class="modal-overlay" @click="closeModal">
-    <div class="modal-content" @click.stop>
-      <div class="modal-header">
-        <h3>{{ modalTitle }}</h3>
-        <button class="close-btn" @click="closeModal">×</button>
-      </div>
-      <div class="modal-body" v-html="modalContent"></div>
-      <div class="modal-footer">
+    <div v-if="modalOpen" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>{{ modalTitle }}</h3>
+        </div>
+        <div class="modal-body">
+          <div v-for="(p, i) in modalContentLines" :key="i" class="modal-text-block">
+            <p v-if="p.type === 'p'">{{ p.text }}</p>
+            <strong v-if="p.type === 'h4'">{{ p.text }}</strong>
+          </div>
+        </div>
         <button class="btn-small" @click="closeModal">Закрыть</button>
       </div>
     </div>
@@ -75,180 +78,98 @@
 </template>
 <script setup>
   import { ref, computed, onMounted } from 'vue'
+  import { vMaska } from "maska"
   
-  const emit = defineEmits(['registered'])
+  const tg = window.Telegram?.WebApp
   
   const form = ref({
-    lastName: '',
-    firstName: '',
-    phone: '',
-    birthDate: '',
-    gender: '',
-    email: ''
+    lastName: '', firstName: '', phone: '',
+    birthDate: '', gender: '', email: ''
   })
   const consentGiven = ref(false)
   const loading = ref(false)
   const modalOpen = ref(false)
   const currentModal = ref('')
   
-  const isValidPhone = (phone) => {
-    const cleaned = phone.replace(/\D/g, '')
-    return cleaned.length === 11 && cleaned.startsWith('7')
-  }
-  
-  const isValidEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    return re.test(email)
-  }
-  
-  const isAdult = (birthDate) => {
-    if (!birthDate) return false
-    const today = new Date()
-    const dob = new Date(birthDate)
-    const age = today.getFullYear() - dob.getFullYear()
-    const monthDiff = today.getMonth() - dob.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dob.getDate())) {
-      return age - 1 >= 14
+  // Данные модалок вынесены в константы без HTML-тегов внутри строк для безопасности
+  const MODALS_DATA = {
+    rules: {
+      title: 'Правила программы',
+      lines: [
+        { type: 'h4', text: '1. Участие' },
+        { type: 'p', text: 'Программа доступна всем гостям кофеен через Telegram Mini App.' },
+        { type: 'h4', text: '2. Бонусы' },
+        { type: 'p', text: 'Начисление от 1% до 10% в зависимости от уровня.' }
+      ]
+    },
+    privacy: {
+      title: 'Конфиденциальность',
+      lines: [
+        { type: 'h4', text: '1. Данные' },
+        { type: 'p', text: 'Мы собираем ФИО, телефон и Email для работы программы лояльности.' }
+      ]
     }
-    return age >= 14
   }
+  
+  const modalTitle = computed(() => MODALS_DATA[currentModal.value]?.title || '')
+  const modalContentLines = computed(() => MODALS_DATA[currentModal.value]?.lines || [])
+  
+  const openModal = (key) => { currentModal.value = key; modalOpen.value = true }
+  const closeModal = () => { modalOpen.value = false }
   
   const isValid = computed(() => {
     const f = form.value
-    return (
-      f.lastName.trim().length > 0 &&
-      f.firstName.trim().length > 0 &&
-      f.gender !== '' &&
-      f.birthDate !== '' &&
-      isAdult(f.birthDate) &&
-      isValidPhone(f.phone) &&
-      isValidEmail(f.email)
-    )
-  })
-  
-  const MODALS = {
-    rules: {
-      title: 'Правила программы лояльности',
-      content: `
-        <p><strong>1. Участие</strong><br>Программа доступна всем гостям кофеен dwntwn. Требуется регистрация через Telegram Mini App.</p>
-        <p><strong>2. Начисление бонусов</strong><br>Бонусы начисляются за покупки в зависимости от уровня карты:</p>
-        <ul>
-          <li>PLATINA — 10%</li>
-          <li>GOLD — 7%</li>
-          <li>SILVER — 5%</li>
-          <li>BRONZE — 3%</li>
-          <li>IRON — 1%</li>
-        </ul>
-        <p>Бонусы округляются в меньшую сторону. Бонусы ≠ рубли.</p>
-        <p><strong>3. Обмен бонусов</strong><br>Только на подарки из каталога «Подарки». После обмена бонусы списываются безвозвратно.</p>
-        <p><strong>4. Акции</strong><br>Акции не суммируются. При использовании акции бонусы не начисляются.</p>
-        <p><strong>5. Срок действия</strong><br>Бонусы действительны 12 месяцев с даты начисления.</p>
-        <p><strong>6. Выход из программы</strong><br>Вы можете покинуть программу в любой момент. Все данные (бонусы, история, профиль) будут удалены без возможности восстановления. Повторная регистрация разрешена.</p>
-        <p><strong>7. Изменение правил</strong><br>Мы можем обновлять правила. Изменения вступают в силу через 10 дней после уведомления в Telegram-боте @dwntwn_coffee_bot.</p>
-      `
-    },
-    privacy: {
-      title: 'Политика конфиденциальности',
-      content: `
-        <p><strong>1. Сбор данных</strong><br>Мы собираем: ФИО, телефон, email, дату рождения, пол и Telegram ID — только для работы программы лояльности.</p>
-        <p><strong>2. Цели обработки</strong><br>— Идентификация участника;<br>— Начисление бонусов;<br>— Управление аккаунтом.</p>
-        <p><strong>3. Хранение</strong><br>Данные хранятся на серверах на территории РФ.</p>
-        <p><strong>4. Передача третьим лицам</strong><br>Не осуществляется.</p>
-        <p><strong>5. Удаление данных</strong><br>При выходе из программы все персональные данные удаляются в течение 24 часов в соответствии с ФЗ-152 «О персональных данных».</p>
-        <p><strong>6. Отзыв согласия</strong><br>Вы можете отозвать согласие в любой момент через функцию «Покинуть программу».</p>
-        <p><strong>7. Безопасность</strong><br>Мы применяем технические и организационные меры для защиты ваших данных.</p>
-      `
-    }
-  }
-  
-  const modalTitle = computed(() => MODALS[currentModal.value]?.title || '')
-  const modalContent = computed(() => MODALS[currentModal.value]?.content || '')
-  
-  const openModal = (key) => {
-    currentModal.value = key
-    modalOpen.value = true
-  }
-  
-  const closeModal = () => {
-    modalOpen.value = false
-    currentModal.value = ''
-  }
-  
-  function waitForTelegramInit(timeoutMs = 3000) {
-    return new Promise((resolve) => {
-      const start = Date.now()
-      const check = () => {
-        const tg = window.Telegram?.WebApp
-        if (tg && tg.initData !== undefined) {
-          resolve(tg.initData)
-        } else if (Date.now() - start > timeoutMs) {
-          resolve("")
-        } else {
-          setTimeout(check, 50)
-        }
-      }
-      check()
-    })
-  }
-  
-  onMounted(() => {
-    const tg = window.Telegram?.WebApp
-    if (tg) {
-      tg.expand()
-      tg.ready()
-      setTimeout(() => {
-        const firstInput = document.querySelector('input')
-        if (firstInput) firstInput.focus()
-      }, 400)
-    }
+    const phoneClean = f.phone.replace(/\D/g, '')
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    
+    return f.lastName.trim() && f.firstName.trim() && 
+           phoneClean.length === 11 && emailRegex.test(f.email) &&
+           f.birthDate && f.gender
   })
   
   const submit = async () => {
-    if (!isValid.value) {
-      alert('Пожалуйста, заполните все поля корректно.')
-      return
-    }
-  
+    if (!isValid.value) return
+    
     loading.value = true
-    const initData = await waitForTelegramInit()
+    const initData = tg?.initData || ""
   
     if (!initData) {
-      alert("❌ Нет данных от Telegram. Откройте приложение через бота!")
+      tg?.showAlert("Ошибка: Запустите приложение через Telegram")
       loading.value = false
       return
     }
   
     try {
-      const payload = {
-        initData,
-        first_name: form.value.firstName.trim(),
-        last_name: form.value.lastName.trim(),
-        phone: form.value.phone.replace(/\D/g, ''),
-        email: form.value.email.trim(),
-        birth_date: form.value.birthDate,
-        gender: form.value.gender
-      }
-  
       const res = await fetch(`${window.API_BASE}/api/client/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify({
+          initData,
+          ...form.value,
+          phone: form.value.phone.replace(/\D/g, '')
+        })
       })
   
       if (res.ok) {
-        emit('registered')
+        tg?.showAlert("Регистрация успешна!", () => {
+          window.location.reload() // Или переход на главную
+        })
       } else {
-        const err = await res.json().catch(() => ({}))
-        alert("Ошибка регистрации: " + (err.detail || "Неизвестная ошибка"))
+        const err = await res.json()
+        tg?.showConfirm(err.detail || "Ошибка регистрации")
       }
     } catch (e) {
-      console.error("Registration error:", e)
-      alert("Ошибка подключения")
+      tg?.showAlert("Сетевая ошибка. Проверьте интернет.")
     } finally {
       loading.value = false
     }
   }
-</script>
+  
+  onMounted(() => {
+    tg?.expand()
+    tg?.ready()
+  })
+  </script>
 
 <style scoped>
 .card {
