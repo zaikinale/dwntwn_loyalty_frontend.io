@@ -8,7 +8,6 @@
     </button>
   </div>
 
-  <!-- Рабочее место -->
   <div v-if="activeTab === 'workplace'" class="tab active">
     <div class="card">
       <h3>Поиск клиента</h3>
@@ -16,6 +15,7 @@
         <input
           v-model="searchQuery"
           placeholder="Номер карты (DTLC-XXXXXX) или телефон (+7...)"
+          @keyup.enter="searchClient"
         />
         <button class="search-btn" @click="searchClient" :disabled="loading">Найти</button>
       </div>
@@ -59,18 +59,26 @@
     </div>
   </div>
 
-  <!-- История операций -->
   <div v-if="activeTab === 'history'" class="tab active">
     <div class="card">
       <h3>История операций</h3>
       <div v-if="myTransactions.length === 0" class="empty">Нет операций</div>
-      <div v-for="t in myTransactions" :key="t.id" class="transaction-item">
-        <div :class="t.points_change > 0 ? 'points-positive' : 'points-negative'">
-          {{ t.points_change > 0 ? '+' : '' }}{{ t.points_change }}
+      <div v-for="t in myTransactions" :key="t.id" class="transaction-item" style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="flex: 1;">
+          <div :class="t.points_change > 0 ? 'points-positive' : 'points-negative'">
+            {{ t.points_change > 0 ? '+' : '' }}{{ t.points_change }}
+          </div>
+          <div>{{ t.client_name }}</div>
+          <div>{{ t.description }}</div>
+          <div class="timestamp">{{ formatDateTime(t.created_at) }}</div>
         </div>
-        <div>{{ t.client_name }}</div>
-        <div>{{ t.description }}</div>
-        <div class="timestamp">{{ formatDateTime(t.created_at) }}</div>
+        <button 
+          v-if="!t.description.includes('Отмена')" 
+          @click="cancelTx(t.id)" 
+          style="background: #331111; color: #ff4444; border: 1px solid #552222; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;"
+        >
+          Отменить
+        </button>
       </div>
     </div>
   </div>
@@ -95,35 +103,38 @@ const errorMessage = ref('')
 const isScanning = ref(false)
 const qrScanner = ref(null)
 
-const getInitData = () => {
-  return window.Telegram?.WebApp?.initData || ''
-}
-
-const formatDateTime = (isoStr) => {
-  return new Date(isoStr).toLocaleString('ru-RU')
+const getInitData = () => window.Telegram?.WebApp?.initData || ''
+const formatDateTime = (isoStr) => new Date(isoStr).toLocaleString('ru-RU')
+// Вынес загрузку истории в отдельную функцию для переиспользования
+const loadHistory = async () => {
+  try {
+    const res = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ initData: getInitData() })
+    })
+    if (res.ok) {
+      myTransactions.value = await res.json()
+    }
+  } catch (e) {
+    console.error("Ошибка загрузки истории", e)
+  }
 }
 
 onMounted(async () => {
   window.Telegram?.WebApp?.ready?.()
   try {
-    const [giftsRes, historyRes] = await Promise.all([
+    const [giftsRes] = await Promise.all([
       fetch(`${window.API_BASE}/api/client/gifts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      }),
-      fetch(`${window.API_BASE}/api/staff/my-transactions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ initData: getInitData() })
       })
     ])
-
     gifts.value = await giftsRes.json()
-    myTransactions.value = historyRes.ok ? await historyRes.json() : []
+    await loadHistory()
   } catch (e) {
     errorMessage.value = "Ошибка загрузки данных"
-    console.error(e)
   }
 })
 
@@ -131,122 +142,70 @@ const searchClient = async () => {
   errorMessage.value = ''
   const q = searchQuery.value.trim()
   if (!q) return
-
+  loading.value = true
   try {
-    const payload = { initData: getInitData(), [q.match(/^\d+$/) ? 'phone' : 'card_number']: q }
-    const url = q.match(/^\d+$/) 
-      ? `${window.API_BASE}/api/staff/client-by-phone`
-      : `${window.API_BASE}/api/staff/client-by-card`
+    const isPhone = q.match(/^\+?\d+$/)
+    const payload = { initData: getInitData(), [isPhone ? 'phone' : 'card_number']: q }
+    const url = `${window.API_BASE}/api/staff/client-by-${isPhone ? 'phone' : 'card'}`
 
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
-
     client.value = res.ok ? await res.json() : null
-    if (!client.value) {
-      errorMessage.value = "Клиент не найден"
-    }
+    if (!client.value) errorMessage.value = "Клиент не найден"
   } catch (e) {
     errorMessage.value = "Ошибка поиска"
+  } finally {
+    loading.value = false
   }
 }
 
+// НОВЫЙ БЕСШОВНЫЙ СКАНЕР
 const scanQR = async () => {
   errorMessage.value = ''
-
-  if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
-    try {
-      const data = await Telegram.WebApp.scanQrCode()
+  
+  if (window.Telegram?.WebApp?.showScanQrPopup) {
+    window.Telegram.WebApp.showScanQrPopup({ text: "Сканируйте QR клиента" }, (data) => {
       if (data) {
-        searchQuery.value = String(data).trim()
-        await searchClient()
+        searchQuery.value = data.trim()
+        window.Telegram.WebApp.closeScanQrPopup()
+        searchClient()
+        return true
       }
-    } catch (err) {
-      errorMessage.value = "Не удалось отсканировать QR-код в Telegram"
-    }
+    })
     return
   }
 
-  if (isScanning.value) {
-    stopHtml5QrScanner()
-    return
-  }
-
+  // Фолбек на библиотеку
+  if (isScanning.value) { stopHtml5QrScanner(); return; }
   isScanning.value = true
-
   try {
     const { Html5QrcodeScanner } = await import('html5-qrcode')
-
     const container = document.getElementById('qr-reader')
-    if (!container) {
-      throw new Error('Контейнер #qr-reader не найден в DOM')
-    }
-    container.style.display = 'block'
-
-    const config = {
-      fps: 10,
-      qrbox: { width: 250, height: 250 },
-      rememberLastUsedCamera: true,
-      useBarCodeDetectorIfSupported: false,
-      formatsToSupport: ['QR_CODE']
-    }
-
-    const onScanSuccess = (decodedText) => {
+    if (container) container.style.display = 'block'
+    qrScanner.value = new Html5QrcodeScanner('qr-reader', { fps: 10, qrbox: 250 }, false)
+    qrScanner.value.render((text) => {
       stopHtml5QrScanner()
-      searchQuery.value = decodedText.trim()
+      searchQuery.value = text.trim()
       searchClient()
-    }
-
-    const onScanFailure = (error) => {
-      if (!error?.includes('NotFoundException')) {
-        console.warn('QR scan error:', error)
-      }
-    }
-
-    qrScanner.value = new Html5QrcodeScanner('qr-reader', config, false)
-    qrScanner.value.render(onScanSuccess, onScanFailure)
+    })
   } catch (err) {
-    console.error('Ошибка запуска сканера:', err)
-    const msg = err?.message || (typeof err === 'string' ? err : 'неизвестная ошибка')
-    errorMessage.value = 'Не удалось запустить сканер: ' + msg
     isScanning.value = false
-    const container = document.getElementById('qr-reader')
-    if (container) container.style.display = 'none'
   }
 }
 
 const stopHtml5QrScanner = () => {
-  if (qrScanner.value) {
-    qrScanner.value.clear()
-    qrScanner.value = null
-  }
+  if (qrScanner.value) { qrScanner.value.clear(); qrScanner.value = null; }
   const container = document.getElementById('qr-reader')
-  if (container) {
-    container.style.display = 'none'
-  }
+  if (container) container.style.display = 'none'
   isScanning.value = false
 }
 
-onBeforeUnmount(() => {
-  stopHtml5QrScanner()
-})
 const addPoints = async () => {
-  if (!client.value || !purchaseAmount.value || purchaseAmount.value <= 0) {
-    errorMessage.value = "Укажите сумму покупки"
-    return
-  }
-  
-  // Локальная проверка (базовая)
-  if (purchaseAmount.value > 2500) {
-    errorMessage.value = "Максимум 2500 руб. за одну операцию"
-    return
-  }
-
+  if (!client.value || purchaseAmount.value <= 0) return
   loading.value = true
-  errorMessage.value = "" // Очищаем старые ошибки перед запросом
-
   try {
     const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
       method: 'POST',
@@ -257,43 +216,39 @@ const addPoints = async () => {
         purchase_amount: purchaseAmount.value
       })
     })
-
     if (res.ok) {
-      await searchClient()
-      purchaseAmount.value = 0
-      
-      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      if (histRes.ok) {
-        myTransactions.value = await histRes.json()
-      }
-      
       alert("✅ Баллы успешно начислены!");
-
+      purchaseAmount.value = 0
+      await searchClient()
+      await loadHistory() // Обновляем историю
     } else {
       const err = await res.json()
-      
-      errorMessage.value = err.detail || "Ошибка начисления"
-      
-      if (window.Telegram?.WebApp?.HapticFeedback) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-      }
+      errorMessage.value = err.detail || "Ошибка"
     }
-  } catch (e) {
-    errorMessage.value = "Ошибка подключения к серверу"
-  } finally {
-    loading.value = false
-  }
+  } catch (e) { errorMessage.value = "Ошибка сети" }
+  finally { loading.value = false }
+}
+const cancelTx = async (txId) => {
+  if (!confirm('Вы уверены, что хотите отменить эту операцию?')) return
+  try {
+    const res = await fetch(`${window.API_BASE}/api/admin/cancel-transaction`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ transaction_id: txId, initData: getInitData() })
+    })
+    if (res.ok) {
+      alert('Операция отменена');
+      await loadHistory()
+      if (client.value) await searchClient()
+    } else {
+      const err = await res.json()
+      alert(err.detail || 'Ошибка отмены')
+    }
+  } catch (e) { alert('Ошибка сети') }
 }
 
 const redeemGift = async () => {
   if (!client.value || !selectedGift.value) return
-  const gift = gifts.value.find(g => g.id == selectedGift.value)
-  if (!confirm(`Выдать "${gift?.name}" клиенту ${client.value.name}?`)) return
-
   loading.value = true
   try {
     const res = await fetch(`${window.API_BASE}/api/staff/redeem-gift`, {
@@ -305,28 +260,20 @@ const redeemGift = async () => {
         gift_id: selectedGift.value
       })
     })
-
     if (res.ok) {
-      await searchClient()
       selectedGift.value = ''
-      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      myTransactions.value = await histRes.json()
+      await searchClient()
+      await loadHistory() // Обновляем историю
     } else {
       const err = await res.json()
-      errorMessage.value = err.detail || "Ошибка выдачи"
+      errorMessage.value = err.detail || "Ошибка"
     }
-  } catch (e) {
-    errorMessage.value = "Ошибка подключения"
-  } finally {
-    loading.value = false
-  }
+  } catch (e) { errorMessage.value = "Ошибка" }
+  finally { loading.value = false }
 }
-</script>
 
+onBeforeUnmount(() => stopHtml5QrScanner())
+</script>
 <style scoped>
 .header h1 {
   color: white;
