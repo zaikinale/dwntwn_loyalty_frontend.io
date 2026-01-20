@@ -676,16 +676,20 @@ onBeforeUnmount(() => {
 })
 
 const addPoints = async () => {
-  clearError()
   if (!client.value || !purchaseAmount.value || purchaseAmount.value <= 0) {
     errorMessage.value = "Укажите сумму покупки"
     return
   }
+  
+  // Локальная проверка (базовая)
   if (purchaseAmount.value > 2500) {
-    errorMessage.value = "Максимум 2500 руб."
+    errorMessage.value = "Максимум 2500 руб. за одну операцию"
     return
   }
+
   loading.value = true
+  errorMessage.value = "" // Очищаем старые ошибки перед запросом
+
   try {
     const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
       method: 'POST',
@@ -696,15 +700,33 @@ const addPoints = async () => {
         purchase_amount: purchaseAmount.value
       })
     })
+
     if (res.ok) {
       await searchClient()
       purchaseAmount.value = 0
+      
+      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      })
+      if (histRes.ok) {
+        myTransactions.value = await histRes.json()
+      }
+      
+      alert("✅ Баллы успешно начислены!");
+
     } else {
       const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось начислить баллы"
+      
+      errorMessage.value = err.detail || "Ошибка начисления"
+      
+      if (window.Telegram?.WebApp?.HapticFeedback) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+      }
     }
   } catch (e) {
-    errorMessage.value = "Ошибка подключения"
+    errorMessage.value = "Ошибка подключения к серверу"
   } finally {
     loading.value = false
   }

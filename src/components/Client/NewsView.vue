@@ -41,7 +41,7 @@
         </div>
       </div>
       <div class="gifts-catalog-section" v-if="giftsCatalog.length">
-        <div class="section-title">🎁 Каталог подарков</div>
+        <div class="section-title">Каталог подарков</div>
         <div class="gifts-grid">
           <div v-for="gift in giftsCatalog" :key="gift.id" class="gift-card-new glass">
             <div class="gift-image-wrapper">
