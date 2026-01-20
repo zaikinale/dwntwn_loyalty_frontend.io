@@ -516,6 +516,7 @@ const canselTx = async (txId) => {
       alert('Ошибка: ' + err.detail);
     }
   } catch (e) {
+    console.error(e)
     alert('Ошибка соединения с сервером');
   }
 }
