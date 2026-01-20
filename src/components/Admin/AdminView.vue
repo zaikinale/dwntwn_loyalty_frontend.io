@@ -249,28 +249,29 @@
 
   <!-- История -->
   <div v-if="activeTab === 'history'" class="tab active">
-    <div class="card">
-      <h3>История операций</h3>
-      <div v-for="t in transactions" :key="t.id" class="transaction-card">
-        <div class="tx-main">
-          <div :class="['tx-amount', t.points_change > 0 ? 'pos' : 'neg']">
-            {{ t.points_change > 0 ? '+' : '' }}{{ t.points_change }}
-          </div>
-          <div class="tx-details">
-            <div class="tx-user">{{ t.client_name }}</div>
-            <div class="tx-desc">{{ t.description }}</div>
-          </div>
-          <button
-            v-if="!tx.description.includes('[ОТМЕНЕНА]')"
-            @click="canselTx(tx.id)"
-            class="btn-cancel-small"
-          >
-            Отменить
-          </button>
+  <div class="card">
+    <h3>История операций</h3>
+    <div v-for="t in transactions" :key="t.id" class="transaction-card">
+      <div class="tx-main">
+        <div :class="['tx-amount', t.points_change > 0 ? 'pos' : 'neg']">
+          {{ t.points_change > 0 ? '+' : '' }}{{ t.points_change }}
         </div>
-        <div class="timestamp">{{ formatDateTime(t.created_at) }}</div>
+        <div class="tx-details">
+          <div class="tx-user">{{ t.client_name }}</div>
+          <div class="tx-desc">{{ t.description }}</div>
+        </div>
+        
+        <button
+          v-if="t.description && !t.description.includes('[ОТМЕНЕНА]')"
+          @click="canselTx(t.id)" 
+          class="btn-cancel-small"
+        >
+          Отменить
+        </button>
       </div>
+      <div class="timestamp">{{ formatDateTime(t.created_at) }}</div>
     </div>
+  </div>
   </div>
 
   <!-- Аудит -->
