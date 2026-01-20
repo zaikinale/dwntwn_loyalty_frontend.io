@@ -499,7 +499,7 @@ const canselTx = async (txId) => {
   if (!confirm('Вы уверены, что хотите отменить эту операцию? Баллы клиента будут изменены.')) return;
   
   try {
-    const response = await fetch(`${this.backendUrl}/api/admin/cancel-transaction`, {
+    const response = await fetch(`${window.API_BASE}/api/admin/cancel-transaction`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
