@@ -473,6 +473,7 @@ onMounted(async () => {
     errorMessage.value = "Ошибка загрузки данных"
   }
 })
+
 const loadCurrentNotifications = async () => {
   try {
     const res = await fetch(`${window.API_BASE}/api/admin/all-notifications`, {
