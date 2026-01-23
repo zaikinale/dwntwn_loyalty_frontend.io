@@ -108,41 +108,54 @@
 import { ref } from 'vue'
 
 const isRulesVisible = ref(false)
-
 const leaveLoyaltyProgram = async () => {
-  const confirmed = confirm(
-    'Вы уверены, что хотите покинуть программу лояльности?\n' +
-    'Все ваши бонусы будут удалены, но вы сможете зарегистрироваться снова.'
-  )
-  if (!confirmed) return
+  const tg = window.Telegram?.WebApp;
 
-  const initData = window.Telegram?.WebApp?.initData
-  if (!initData) {
-    alert('Ошибка: не удалось получить данные сессии.')
-    return
-  }
+  // 1. Используем нативное подтверждение Telegram
+  tg?.showConfirm(
+    'Вы уверены, что хотите покинуть программу лояльности?\nВсе ваши бонусы будут удалены безвозвратно.',
+    async (confirmed) => {
+      if (!confirmed) return;
 
-  try {
-    const response = await fetch(`${window.API_BASE}/api/client/delete-account`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData })
-    })
+      const initData = tg?.initData;
+      if (!initData) {
+        tg?.showAlert('Ошибка: не удалось получить данные сессии.');
+        return;
+      }
 
-    const data = await response.json()
+      // Включаем индикатор загрузки на кнопке (рекомендуется добавить переменную loading)
+      // loading.value = true; 
 
-    if (response.ok) {
-      // 💡 Перезагружаем страницу, чтобы выйти из состояния "зарегистрирован"
-      alert('Спасибо, что пользовались нашей программой лояльности!\nМы всегда будем рады вам снова!')
-      window.location.reload()
-    } else {
-      alert('Ошибка: ' + (data.detail || 'Не удалось удалить аккаунт'))
+      try {
+        const response = await fetch(`${window.API_BASE}/api/client/delete-account`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // 2. Нативное уведомление об успехе
+          tg?.showAlert(
+            'Спасибо, что были с нами! Ваши данные удалены. Мы всегда будем рады вам снова!', 
+            () => {
+              // Перезагрузка после того, как пользователь нажал "ОК"
+              window.location.reload();
+            }
+          );
+        } else {
+          tg?.showAlert('Ошибка: ' + (data.detail || 'Не удалось удалить аккаунт'));
+        }
+      } catch (err) {
+        console.error('Ошибка при удалении аккаунта:', err);
+        tg?.showAlert('Ошибка подключения к серверу. Попробуйте позже.');
+      } finally {
+        // loading.value = false;
+      }
     }
-  } catch (err) {
-    console.error('Ошибка при удалении аккаунта:', err)
-    alert('Ошибка подключения к серверу. Попробуйте позже.')
-  }
-}
+  );
+};
 </script>
 
 

@@ -145,8 +145,12 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           initData,
-          ...form.value,
-          phone: form.value.phone.replace(/\D/g, '')
+          first_name: form.value.firstName,
+          last_name: form.value.lastName,
+          phone: form.value.phone.replace(/\D/g, ''),
+          birth_date: form.value.birthDate,
+          gender: form.value.gender,
+          email: form.value.email
         })
       })
   
