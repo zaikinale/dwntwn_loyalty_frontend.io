@@ -6,37 +6,35 @@
     </div>
   </div>
 
-  <!-- Регистрация для клиентов -->
   <div v-else-if="userRole === 'client' && !isRegistered" class="app-container">
     <RegisterForm @registered="loadProfile" />
   </div>
 
-  <!-- Основной интерфейс -->
   <div v-else class="app-container">
     <div class="header">
       <h1>DWNTWN coffee</h1>
     </div>
 
-    <!-- Клиент -->
     <template v-if="userRole === 'client'">
-      <div v-show="activeTab === 'card'" class="tab active">
-        <CardView :profile="profile" :gifts="gifts" :transactions="transactions"  />
-      </div>
-      <div v-show="activeTab === 'news'" class="tab active">
-        <NewsView />
-      </div>
-      <div v-show="activeTab === 'info'" class="tab active">
-        <InfoView />
-      </div>
+      <Transition name="tab-fade" mode="out-in">
+        <div :key="activeTab">
+          <div v-if="activeTab === 'card'" class="tab active">
+            <CardView :profile="profile" :gifts="gifts" :transactions="transactions" />
+          </div>
+          <div v-if="activeTab === 'news'" class="tab active">
+            <NewsView />
+          </div>
+          <div v-if="activeTab === 'info'" class="tab active">
+            <InfoView />
+          </div>
+        </div>
+      </Transition>
     </template>
 
-    <!-- Сотрудник -->
     <StaffView v-else-if="userRole === 'staff'" :staff-id="staffId" />
 
-    <!-- Админ -->
     <AdminView v-else-if="userRole === 'admin'" :staff-id="staffId" />
 
-    <!-- Навигация (только для клиента) -->
     <div class="nav" v-if="userRole === 'client'">
       <button :class="{ active: activeTab === 'card' }" @click="activeTab = 'card'">Карта</button>
       <button :class="{ active: activeTab === 'news' }" @click="activeTab = 'news'">Новости</button>
@@ -44,105 +42,95 @@
     </div>
   </div>
 </template>
-
 <script setup>
-import { ref, onMounted } from 'vue'
-import RegisterForm from './components/Client/RegisterForm.vue'
-import CardView from './components/Client/CardView.vue'
-import NewsView from './components/Client/NewsView.vue'
-import InfoView from './components/Client/InfoView.vue'
-import StaffView from './components/Staff/StaffView.vue'
-import AdminView from './components/Admin/AdminView.vue'
-
-const userRole = ref(null)
-const isRegistered = ref(false)
-const profile = ref(null)
-const transactions = ref([])
-const gifts = ref([])
-const staffId = ref(null)
-const activeTab = ref('card')
-
-const getInitData = () => {
-  return window.Telegram?.WebApp?.initData || ""
-}
-
-const loadProfile = async () => {
-  try {
-    const res = await fetch(`${window.API_BASE}/api/client/profile`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: getInitData() })
-    })
-    if (res.ok) {
-      profile.value = await res.json()
-      isRegistered.value = true
-
-      const giftsRes = await fetch(`${window.API_BASE}/api/client/gifts`, {
+  import { ref, onMounted } from 'vue'
+  import RegisterForm from './components/Client/RegisterForm.vue'
+  import CardView from './components/Client/CardView.vue'
+  import NewsView from './components/Client/NewsView.vue'
+  import InfoView from './components/Client/InfoView.vue'
+  import StaffView from './components/Staff/StaffView.vue'
+  import AdminView from './components/Admin/AdminView.vue'
+  
+  const userRole = ref(null)
+  const isRegistered = ref(false)
+  const profile = ref(null)
+  const transactions = ref([])
+  const gifts = ref([])
+  const staffId = ref(null)
+  const activeTab = ref('card')
+  
+  const getInitData = () => window.Telegram?.WebApp?.initData || ""
+  
+  const loadProfile = async () => {
+    const tg = window.Telegram?.WebApp;
+    try {
+      const res = await fetch(`${window.API_BASE}/api/client/profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ initData: getInitData() })
       })
-      gifts.value = await giftsRes.json()
-
-      const txRes = await fetch(`${window.API_BASE}/api/client/transactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      transactions.value = await txRes.json()
-
-      const notifRes = await fetch(`${window.API_BASE}/api/client/user-notifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      if (notifRes.ok) {
-        const notifications = await notifRes.json()
-        const unread = notifications.filter(n => !n.is_read)
-        if (unread.length > 0) {
-          const first = unread[0]
-          alert(`🔔 ${first.title}\n\n${first.message}`)
+      if (res.ok) {
+        profile.value = await res.json()
+        isRegistered.value = true
+  
+        // Параллельная загрузка данных
+        const [giftsRes, txRes, notifRes] = await Promise.all([
+          fetch(`${window.API_BASE}/api/client/gifts`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({initData: getInitData()}) }),
+          fetch(`${window.API_BASE}/api/client/transactions`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({initData: getInitData()}) }),
+          fetch(`${window.API_BASE}/api/client/user-notifications`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({initData: getInitData()}) })
+        ])
+  
+        gifts.value = await giftsRes.json()
+        transactions.value = await txRes.json()
+  
+        if (notifRes.ok) {
+          const notifications = await notifRes.json()
+          const unread = notifications.filter(n => !n.is_read)
+          if (unread.length > 0) {
+            // Использование нативного Telegram окна
+            tg?.showAlert(unread[0].message, undefined, `🔔 ${unread[0].title}`);
+          }
         }
+      } else {
+        isRegistered.value = false
       }
-    } else {
+    } catch (e) {
+      console.error(e)
       isRegistered.value = false
     }
-  } catch (e) {
-    console.error(e)
-    isRegistered.value = false
   }
-}
-
-const authorizeStaff = async () => {
-  try {
-    const res = await fetch(`${window.API_BASE}/api/staff/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: getInitData() })
-    })
-    if (res.ok) {
-      const staff = await res.json()
-      userRole.value = staff.role
-      staffId.value = staff.id
-    } else {
+  
+  const authorizeStaff = async () => {
+    try {
+      const res = await fetch(`${window.API_BASE}/api/staff/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData() })
+      })
+      if (res.ok) {
+        const staff = await res.json()
+        userRole.value = staff.role
+        staffId.value = staff.id
+      } else {
+        userRole.value = 'client'
+        await loadProfile()
+      }
+    } catch (e) {
       userRole.value = 'client'
-      loadProfile()
+      await loadProfile()
     }
-  } catch (e) {
-    userRole.value = 'client'
-    loadProfile()
   }
-}
-
-onMounted(() => {
-  const tg = window.Telegram?.WebApp
-  if (tg) {
-    tg.expand()
-    tg.ready()
-  }
-  authorizeStaff()
-})
+  
+  onMounted(() => {
+    const tg = window.Telegram?.WebApp
+    if (tg) {
+      tg.expand()
+      tg.ready()
+    }
+    authorizeStaff()
+  })
 </script>
+  
 <style>
 
   ::-webkit-scrollbar {
@@ -248,5 +236,19 @@ onMounted(() => {
     text-align: center;
     color: #eee;
     margin: 20px 0;
+  }
+  .tab-fade-enter-active,
+  .tab-fade-leave-active {
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  
+  .tab-fade-enter-from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  
+  .tab-fade-leave-to {
+    opacity: 0;
+    transform: translateY(-10px);
   }
   </style>
