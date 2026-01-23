@@ -473,7 +473,6 @@ onMounted(async () => {
     errorMessage.value = "Ошибка загрузки данных"
   }
 })
-
 const loadCurrentNotifications = async () => {
   try {
     const res = await fetch(`${window.API_BASE}/api/admin/all-notifications`, {
@@ -481,21 +480,44 @@ const loadCurrentNotifications = async () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ initData: getInitData() })
     })
+
     if (!res.ok) {
       throw new Error(`HTTP ${res.status}: ${await res.text()}`)
     }
+
     const data = await res.json()
+    
+    // ОТЛАДКА: Позволит увидеть в консоли, какие именно типы приходят с бэкенда
+    console.log("Полученные уведомления:", data)
+
     currentNotifications.value = {
-      announcement: data.find(n => n.type === 'announcement') || null,
-      novelty: data.filter(n => n.type === 'novelty'),
-      promotion: data.filter(n => n.type === 'promotion')
+      // 1. Объявления: ищем тип 'announcement' или 'promo'
+      announcement: data.find(n => 
+        n.type === 'announcement' || n.type === 'promo' || n.type === 'important'
+      ) || null,
+
+      // 2. Новинки: поддерживаем и 'novelty', и 'news' (частая причина пустоты)
+      novelty: data.filter(n => 
+        n.type === 'novelty' || n.type === 'news'
+      ),
+
+      // 3. Акции: стандартный фильтр
+      promotion: data.filter(n => 
+        n.type === 'promotion' || n.type === 'sale'
+      )
     }
+
+    if (data.length > 0 && 
+        currentNotifications.value.novelty.length === 0 && 
+        currentNotifications.value.promotion.length === 0) {
+      console.warn("Данные пришли, но не прошли фильтрацию по типам. Проверьте поле 'type' в базе данных.");
+    }
+
   } catch (e) {
     errorMessage.value = "Ошибка загрузки уведомлений: " + (e.message || e)
-    console.error("Ошибка загрузки уведомлений:", e)
+    console.error("Детали ошибки:", e)
   }
 }
-
 const canselTx = async (txId) => {
   window.Telegram.WebApp.showConfirm('Вы уверены, что хотите отменить эту операцию? Баллы клиента будут изменены.', async (confirmed) => {
     if (!confirmed) return;
