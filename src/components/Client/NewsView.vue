@@ -1,9 +1,16 @@
 <template>
   <div class="news-page">
     <div class="content-wrapper">
+      <div v-if="!announcement && !novelties.length && !promotions.length" class="empty-state glass">
+        <div class="empty-icon">🔔</div>
+        <h3>Пока новостей нет</h3>
+        <p>Мы обязательно сообщим вам о новых акциях и событиях!</p>
+      </div>
+
       <div v-if="announcement" class="news-item announcement glass">
         <div class="status-badge">Объявление</div>
-        <img v-if="announcement.image_url" :src="announcement.image_url" class="item-img" />
+        <img v-if="announcement.image_url" :src="announcement.image_url" class="item-img" @error="onImgError"/>
+        <div v-else class="img-placeholder">📢</div>
         <div class="item-body announcement-content">
           <h2>{{ announcement.title }}</h2>
           <p v-if="expandedId === 'ann'" class="expanded-desc">{{ announcement.description }}</p>
@@ -15,7 +22,8 @@
 
       <div class="section-title" v-if="novelties.length">Новинки</div>
       <div v-for="item in novelties" :key="item.id" class="news-item novelty glass">
-        <img v-if="item.image_url" :src="item.image_url" class="item-img" />
+        <img v-if="item.image_url" :src="item.image_url" class="item-img" @error="onImgError"/>
+        <div v-else class="img-placeholder">✨</div>
         <div class="item-body">
           <h3>{{ item.title }}</h3>
           <p v-if="expandedId === 'nov-' + item.id" class="expanded-desc">{{ item.description }}</p>
@@ -30,7 +38,7 @@
         <div v-for="promo in promotions" :key="promo.id" class="promo-card glass">
           <div class="promo-container">
             <div class="promo-image-wrapper">
-              <img v-if="promo.image_url" :src="promo.image_url" class="promo-img" />
+              <img v-if="promo.image_url" :src="promo.image_url" class="promo-img" @error="onImgError"/>
               <div v-else class="promo-placeholder">🔥</div>
             </div>
             <div class="promo-info">
@@ -45,7 +53,8 @@
         <div class="gifts-grid">
           <div v-for="gift in giftsCatalog" :key="gift.id" class="gift-card-new glass">
             <div class="gift-image-wrapper">
-              <img :src="gift.image_url || 'placeholder.png'" alt="gift">
+              <img v-if="gift.image_url" :src="gift.image_url" alt="gift" @error="onImgError">
+              <div v-else class="sticker-placeholder-gift">🎁</div>
             </div>
             <div class="gift-details">
               <span class="gift-name">{{ gift.name }}</span>
@@ -79,16 +88,20 @@
       })
       const data = await res.json()
       announcement.value = data.find(n => n.type === 'announcement') || null
-      novelties.value = data.filter(n => n.type === 'novelty')
-      promotions.value = data.filter(n => n.type === 'promotion')
+      novelties.value = data.filter(n => n.type === 'novelty').reverse()
+      promotions.value = data.filter(n => n.type === 'promotion').reverse()
     } catch (e) {
       console.error("Ошибка загрузки уведомлений:", e)
     }
   }
   
   const fetchGiftsCatalog = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/api/public/gifts-catalog`);
+    try { 
+      const response = await fetch(`${API_BASE}/api/client/gifts`, {
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: window.Telegram?.WebApp?.initData || '' })
+      });
       if (response.ok) {
         giftsCatalog.value = await response.json();
       }
@@ -100,6 +113,10 @@
   const toggleExpand = (id) => {
     expandedId.value = expandedId.value === id ? null : id
   }
+
+  const onImgError = (e) => {
+    e.target.style.display = 'none';
+  };
   
   onMounted(() => {
     loadNotifications();
@@ -263,5 +280,44 @@
 
 .gifts-catalog-section {
   margin-bottom: 60px;
+}
+
+.sticker-placeholder, .sticker-placeholder-gift, .img-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  font-size: 40px;
+  width: 100%;
+  height: 100%;
+  min-height: 120px;
+  border-radius: 12px;
+}
+
+.sticker-placeholder-gift {
+  font-size: 32px;
+  min-height: 80px;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  margin-top: 20px;
+  border-radius: 16px;
+}
+
+.empty-icon {
+  font-size: 50px;
+  margin-bottom: 10px;
+}
+
+.empty-state h3 {
+  margin: 0;
+  color: #fff;
+}
+
+.empty-state p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
 }
 </style>
