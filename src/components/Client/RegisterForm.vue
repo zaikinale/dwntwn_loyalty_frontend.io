@@ -78,7 +78,7 @@
 </template>
 <script setup>
   import { ref, computed, onMounted } from 'vue'
-  import { vMaska } from "maska"
+  import { vMaska } from "maska/vue"
   
   const tg = window.Telegram?.WebApp
   
