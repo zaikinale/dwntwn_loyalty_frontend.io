@@ -43,13 +43,25 @@
         </div>
 
         <div class="form-group">
-          <select v-model="selectedGift">
+          <label class="input-label">Обмен на подарок</label>
+          <select v-model="selectedGift" class="styled-select">
             <option value="">Выберите подарок</option>
-            <option v-for="g in gifts" :key="g.id" :value="g.id">
-              {{ g.name }} ({{ g.points_cost }} баллов)
+            <option 
+              v-for="g in gifts" 
+              :key="g.id" 
+              :value="g.id" 
+              :disabled="g.points_cost > client.points"
+              :class="{ 'option-disabled': g.points_cost > client.points }"
+            >
+              {{ g.name }} ({{ g.points_cost }} б.) 
+              {{ g.points_cost > client.points ? '— ❌' : '— ✅' }}
             </option>
           </select>
-          <button @click="redeemGift" :disabled="loading || !selectedGift">
+          <button 
+            @click="redeemGift" 
+            class="btn-redeem"
+            :disabled="loading || !selectedGift"
+          >
             {{ loading ? 'Обработка...' : 'Выдать подарок' }}
           </button>
         </div>
@@ -91,6 +103,7 @@ const props = defineProps({
   staffId: { type: Number, required: true }
 })
 
+const tg = window.Telegram?.WebApp
 const activeTab = ref('workplace')
 const searchQuery = ref('')
 const purchaseAmount = ref(0)
@@ -105,7 +118,6 @@ const qrScanner = ref(null)
 
 const getInitData = () => window.Telegram?.WebApp?.initData || ''
 const formatDateTime = (isoStr) => new Date(isoStr).toLocaleString('ru-RU')
-// Вынес загрузку истории в отдельную функцию для переиспользования
 const loadHistory = async () => {
   try {
     const res = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
@@ -162,7 +174,6 @@ const searchClient = async () => {
   }
 }
 
-// НОВЫЙ БЕСШОВНЫЙ СКАНЕР
 const scanQR = async () => {
   errorMessage.value = ''
   
@@ -178,7 +189,6 @@ const scanQR = async () => {
     return
   }
 
-  // Фолбек на библиотеку
   if (isScanning.value) { stopHtml5QrScanner(); return; }
   isScanning.value = true
   try {
@@ -204,8 +214,9 @@ const stopHtml5QrScanner = () => {
 }
 
 const addPoints = async () => {
-  if (!client.value || purchaseAmount.value <= 0) return
-  loading.value = true
+  if (!client.value || purchaseAmount.value <= 0) return;
+  
+  loading.value = true;
   try {
     const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
       method: 'POST',
@@ -215,37 +226,49 @@ const addPoints = async () => {
         client_id: client.value.id,
         purchase_amount: purchaseAmount.value
       })
-    })
+    });
+
     if (res.ok) {
-      alert("✅ Баллы успешно начислены!");
-      purchaseAmount.value = 0
-      await searchClient()
-      await loadHistory() // Обновляем историю
+      const result = await res.json();
+      tg?.showAlert(`✅ Успешно!\nНачислено: +${result.added} баллов.\nНовый баланс: ${result.balance}`);
+      purchaseAmount.value = 0;
+      await searchClient();
+      await loadHistory();
     } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Ошибка"
+      const err = await res.json();
+      tg?.showAlert(`❌ Ошибка: ${err.detail || "Не удалось начислить"}`);
     }
-  } catch (e) { errorMessage.value = "Ошибка сети" }
-  finally { loading.value = false }
-}
+  } catch (e) {
+    tg?.showAlert("❌ Ошибка сети");
+  } finally {
+    loading.value = false;
+  }
+};
+
 const cancelTx = async (txId) => {
-  if (!confirm('Вы уверены, что хотите отменить эту операцию?')) return
-  try {
-    const res = await fetch(`${window.API_BASE}/api/admin/cancel-transaction`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transaction_id: txId, initData: getInitData() })
-    })
-    if (res.ok) {
-      alert('Операция отменена');
-      await loadHistory()
-      if (client.value) await searchClient()
-    } else {
-      const err = await res.json()
-      alert(err.detail || 'Ошибка отмены')
+  tg?.showConfirm('Вы уверены, что хотите отменить эту операцию? Это действие нельзя будет отменить.', async (confirmed) => {
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`${window.API_BASE}/api/admin/cancel-transaction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transaction_id: txId, initData: getInitData() })
+      });
+
+      if (res.ok) {
+        tg?.showAlert('✅ Операция успешно отменена');
+        await loadHistory();
+        if (client.value) await searchClient();
+      } else {
+        const err = await res.json();
+        tg?.showAlert('❌ Ошибка: ' + (err.detail || 'Отмена недоступна'));
+      }
+    } catch (e) {
+      tg?.showAlert('❌ Ошибка сети');
     }
-  } catch (e) { alert('Ошибка сети') }
-}
+  });
+};
 
 const redeemGift = async () => {
   if (!client.value || !selectedGift.value) return
@@ -263,7 +286,7 @@ const redeemGift = async () => {
     if (res.ok) {
       selectedGift.value = ''
       await searchClient()
-      await loadHistory() // Обновляем историю
+      await loadHistory()
     } else {
       const err = await res.json()
       errorMessage.value = err.detail || "Ошибка"
@@ -408,5 +431,31 @@ onBeforeUnmount(() => stopHtml5QrScanner())
   color: #aaa;
   padding: 20px 0;
   font-style: italic;
+}
+
+.option-disabled {
+  color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.styled-select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  margin-bottom: 10px;
+}
+
+.btn-redeem {
+  background: #f39c12;
+  color: white;
+  transition: all 0.3s;
+}
+
+.btn-redeem:disabled {
+  background: #7f8c8d;
+  opacity: 0.5;
 }
 </style>

@@ -156,7 +156,7 @@
   
       if (res.ok) {
         tg?.showAlert("Регистрация успешна!", () => {
-          window.location.reload() // Или переход на главную
+          window.location.reload()
         })
       } else {
         const err = await res.json()
