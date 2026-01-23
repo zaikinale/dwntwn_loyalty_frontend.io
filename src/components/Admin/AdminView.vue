@@ -494,62 +494,54 @@ const loadCurrentNotifications = async () => {
     console.error("Ошибка загрузки уведомлений:", e)
   }
 }
+
 const canselTx = async (txId) => {
-  if (!confirm('Вы уверены, что хотите отменить эту операцию? Баллы клиента будут изменены.')) return;
-  
-  try {
-    const response = await fetch(`${window.API_BASE}/api/admin/cancel-transaction`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        transaction_id: txId,
-        initData: getInitData() 
-      })
-    });
-    
-    if (response.ok) {
-      alert('Операция успешно отменена');
-      
-      // Обновляем список транзакций сразу после отмены
-      const resTx = await fetch(`${window.API_BASE}/api/admin/transactions`, {
+  window.Telegram.WebApp.showConfirm('Вы уверены, что хотите отменить эту операцию? Баллы клиента будут изменены.', async (confirmed) => {
+    if (!confirmed) return;
+    try {
+      const response = await fetch(`${window.API_BASE}/api/admin/cancel-transaction`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
+        body: JSON.stringify({ transaction_id: txId, initData: getInitData() })
       });
       
-      if (resTx.ok) {
-        transactions.value = await resTx.json();
+      if (response.ok) {
+        window.Telegram.WebApp.showAlert('✅ Операция успешно отменена');
+        const resTx = await fetch(`${window.API_BASE}/api/admin/transactions`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: getInitData() })
+        });
+        if (resTx.ok) transactions.value = await resTx.json();
+      } else {
+        const err = await response.json();
+        window.Telegram.WebApp.showAlert('❌ Ошибка: ' + (err.detail || 'Не удалось отменить'));
       }
-    } else {
-      const err = await response.json();
-      alert('Ошибка: ' + (err.detail || 'Не удалось отменить'));
+    } catch (e) {
+      window.Telegram.WebApp.showAlert('❌ Ошибка соединения с сервером');
     }
-  } catch (e) {
-    console.error(e);
-    alert('Ошибка соединения с сервером');
-  }
-}
+  });
+};
 
 const deleteNotification = async (id) => {
-  if (!confirm("Удалить Новость? Это действие нельзя отменить.")) return
-  try {
-    const res = await fetch(`${window.API_BASE}/api/admin/delete-notification`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: getInitData(), notification_id: id })
-    })
-    if (res.ok) {
-      await loadCurrentNotifications()
-      loadAuditLogs()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось удалить"
+  window.Telegram.WebApp.showConfirm("Удалить Новость? Это действие нельзя отменить.", async (confirmed) => {
+    if (!confirmed) return;
+    try {
+      const res = await fetch(`${window.API_BASE}/api/admin/delete-notification`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData(), notification_id: id })
+      });
+      if (res.ok) {
+        await loadCurrentNotifications();
+        loadAuditLogs();
+        window.Telegram.WebApp.showAlert("✅ Новость удалена");
+      }
+    } catch (e) {
+      window.Telegram.WebApp.showAlert("❌ Ошибка подключения");
     }
-  } catch (e) {
-    errorMessage.value = "Ошибка подключения"
-  }
-}
-
+  });
+};
 const loadGiftsForRedeem = async () => {
   const res = await fetch(`${window.API_BASE}/api/client/gifts`, {
     method: 'POST',
@@ -581,99 +573,32 @@ const loadStaffAndClients = async () => {
 }
 
 const searchClient = async () => {
-  clearError()
-  const q = searchQuery.value.trim()
-  if (!q) return
+  clearError();
+  const q = searchQuery.value.trim();
+  if (!q) return;
   try {
-    const payload = { initData: getInitData(), [q.match(/^\d+$/) ? 'phone' : 'card_number']: q }
-    const url = q.match(/^\d+$/) 
+    const isPhone = q.match(/^\d+$/);
+    const payload = { initData: getInitData(), [isPhone ? 'phone' : 'card_number']: q };
+    const url = isPhone 
       ? `${window.API_BASE}/api/staff/client-by-phone`
-      : `${window.API_BASE}/api/staff/client-by-card`
+      : `${window.API_BASE}/api/staff/client-by-card`;
 
     const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
-    })
-    client.value = res.ok ? await res.json() : null
+    });
+    client.value = res.ok ? await res.json() : null;
     if (!client.value) {
-      errorMessage.value = "Клиент не найден"
+      errorMessage.value = "Клиент не найден";
     }
   } catch (e) {
-    errorMessage.value = "Ошибка поиска клиента"
+    errorMessage.value = "Ошибка поиска клиента";
   }
-}
-
-// const scanQR = async () => {
-//   clearError()
-
-//   if (typeof Telegram !== 'undefined' && Telegram.WebApp?.scanQrCode) {
-//     try {
-//       const data = await Telegram.WebApp.scanQrCode()
-//       if (data) {
-//         searchQuery.value = String(data).trim()
-//         await searchClient()
-//       }
-//     } catch (err) {
-//       errorMessage.value = "Не удалось отсканировать QR"
-//     }
-//     return
-//   }
-
-//   if (isScanning.value) {
-//     stopHtml5QrScanner()
-//     return
-//   }
-
-//   isScanning.value = true
-//   errorMessage.value = ''
-
-//   try {
-//     const { Html5QrcodeScanner } = await import('html5-qrcode')
-
-//     const container = document.getElementById('qr-reader')
-//     if (!container) {
-//       throw new Error('Контейнер #qr-reader не найден в DOM')
-//     }
-//     container.style.display = 'block'
-
-//     const config = {
-//       fps: 10,
-//       qrbox: { width: 250, height: 250 },
-//       rememberLastUsedCamera: true,
-//       useBarCodeDetectorIfSupported: false,
-//       formatsToSupport: ['QR_CODE']
-//     }
-
-//     const onScanSuccess = (decodedText) => {
-//       stopHtml5QrScanner()
-//       searchQuery.value = decodedText.trim()
-//       searchClient()
-//     }
-
-//     const onScanFailure = (error) => {
-//       if (!error?.includes('NotFoundException')) {
-//         console.warn('QR scan error:', error)
-//       }
-//     }
-
-//     qrScanner.value = new Html5QrcodeScanner('qr-reader', config, false)
-//     qrScanner.value.render(onScanSuccess, onScanFailure)
-
-//   } catch (err) {
-//     console.error('Ошибка запуска сканера:', err)
-//     const msg = err?.message || (typeof err === 'string' ? err : 'неизвестная ошибка')
-//     errorMessage.value = 'Не удалось запустить сканер: ' + msg
-//     isScanning.value = false
-//     const container = document.getElementById('qr-reader')
-//     if (container) container.style.display = 'none'
-//   }
-// }
+};
 
 const scanQR = async () => {
   clearError();
-  
-  // 1. Пробуем родной сканер Telegram (Бесшовный)
   if (window.Telegram?.WebApp?.showScanQrPopup) {
     window.Telegram.WebApp.showScanQrPopup({
       text: "Отсканируйте QR-код клиента"
@@ -685,10 +610,9 @@ const scanQR = async () => {
         return true; 
       }
     });
-    return; // Выходим, если запустили нативный
+    return;
   }
 
-  // 2. Фолбек: если Telegram API недоступен, запускаем старый библиотечный сканер
   if (isScanning.value) {
     stopHtml5QrScanner();
     return;
@@ -739,19 +663,15 @@ onBeforeUnmount(() => {
 
 const addPoints = async () => {
   if (!client.value || !purchaseAmount.value || purchaseAmount.value <= 0) {
-    errorMessage.value = "Укажите сумму покупки"
-    return
+    errorMessage.value = "Укажите сумму покупки";
+    return;
   }
-  
-  // Локальная проверка (базовая)
   if (purchaseAmount.value > 2500) {
-    errorMessage.value = "Максимум 2500 руб. за одну операцию"
-    return
+    errorMessage.value = "Максимум 2500 руб. за одну операцию";
+    return;
   }
 
-  loading.value = true
-  errorMessage.value = "" // Очищаем старые ошибки перед запросом
-
+  loading.value = true;
   try {
     const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
       method: 'POST',
@@ -761,71 +681,62 @@ const addPoints = async () => {
         client_id: client.value.id,
         purchase_amount: purchaseAmount.value
       })
-    })
+    });
 
     if (res.ok) {
-      await searchClient()
-      purchaseAmount.value = 0
-      
-      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      if (histRes.ok) {
-        myTransactions.value = await histRes.json()
-      }
-      
-      alert("✅ Баллы успешно начислены!");
-
+      await searchClient();
+      purchaseAmount.value = 0;
+      window.Telegram.WebApp.showAlert("✅ Баллы успешно начислены!");
     } else {
-      const err = await res.json()
-      
-      errorMessage.value = err.detail || "Ошибка начисления"
-      
+      const err = await res.json();
+      window.Telegram.WebApp.showAlert("❌ " + (err.detail || "Ошибка начисления"));
       if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
       }
     }
   } catch (e) {
-    errorMessage.value = "Ошибка подключения к серверу"
+    window.Telegram.WebApp.showAlert("❌ Ошибка подключения");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const redeemGift = async () => {
-  clearError()
+  clearError();
   if (!client.value || !selectedGift.value) {
-    errorMessage.value = "Выберите подарок"
-    return
+    errorMessage.value = "Выберите подарок";
+    return;
   }
-  const gift = giftsForRedeem.value.find(g => g.id == selectedGift.value)
-  if (!confirm(`Выдать "${gift?.name}" клиенту ${client.value.name}?`)) return
-  loading.value = true
-  try {
-    const res = await fetch(`${window.API_BASE}/api/staff/redeem-gift`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        client_id: client.value.id,
-        gift_id: selectedGift.value
-      })
-    })
-    if (res.ok) {
-      await searchClient()
-      selectedGift.value = ''
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось выдать подарок"
+  const gift = giftsForRedeem.value.find(g => g.id == selectedGift.value);
+  
+  window.Telegram.WebApp.showConfirm(`Выдать "${gift?.name}" клиенту ${client.value.name}?`, async (confirmed) => {
+    if (!confirmed) return;
+    loading.value = true;
+    try {
+      const res = await fetch(`${window.API_BASE}/api/staff/redeem-gift`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          initData: getInitData(),
+          client_id: client.value.id,
+          gift_id: selectedGift.value
+        })
+      });
+      if (res.ok) {
+        window.Telegram.WebApp.showAlert(`✅ Подарок "${gift?.name}" выдан!`);
+        await searchClient();
+        selectedGift.value = '';
+      } else {
+        const err = await res.json();
+        window.Telegram.WebApp.showAlert("❌ " + (err.detail || "Не удалось выдать подарок"));
+      }
+    } catch (e) {
+      window.Telegram.WebApp.showAlert("❌ Ошибка соединения");
+    } finally {
+      loading.value = false;
     }
-  } catch (e) {
-    errorMessage.value = "Ошибка подключения"
-  } finally {
-    loading.value = false
-  }
-}
+  });
+};
 
 const selectClient = (client) => {
   newStaff.value.telegram_id = client.telegram_id
@@ -867,29 +778,26 @@ const addStaff = async () => {
 }
 
 const removeStaff = async (id) => {
-  if (!confirm("Удалить сотрудника? Это действие нельзя отменить.")) return
-  loading.value = true
-  try {
-    const res = await fetch(`${window.API_BASE}/api/admin/delete-staff`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        staff_id: id
-      })
-    })
-    if (res.ok) {
-      await loadStaffAndClients()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось удалить сотрудника"
+  window.Telegram.WebApp.showConfirm("Удалить сотрудника? Это действие нельзя отменить.", async (confirmed) => {
+    if (!confirmed) return;
+    loading.value = true;
+    try {
+      const res = await fetch(`${window.API_BASE}/api/admin/delete-staff`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ initData: getInitData(), staff_id: id })
+      });
+      if (res.ok) {
+        await loadStaffAndClients();
+        window.Telegram.WebApp.showAlert("✅ Сотрудник удален");
+      }
+    } catch (e) {
+      window.Telegram.WebApp.showAlert("❌ Ошибка подключения");
+    } finally {
+      loading.value = false;
     }
-  } catch (e) {
-    errorMessage.value = "Ошибка подключения"
-  } finally {
-    loading.value = false
-  }
-}
+  });
+};
 
 const addNotification = async () => {
   clearError()
@@ -960,36 +868,32 @@ const addGift = async () => {
 }
 
 const deleteGift = async (id) => {
-  if (!confirm("Удалить подарок? Это действие нельзя отменить.")) return
-  loading.value = true
-  try {
-    const res = await fetch(`${window.API_BASE}/api/admin/delete-gift`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        gift_id: id
-      })
-    })
-    if (res.ok) {
-      const resGifts = await fetch(`${window.API_BASE}/api/admin/gifts`, {
+  window.Telegram.WebApp.showConfirm("Удалить подарок? Это действие нельзя отменить.", async (confirmed) => {
+    if (!confirmed) return;
+    loading.value = true;
+    try {
+      const res = await fetch(`${window.API_BASE}/api/admin/delete-gift`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      gifts.value = await resGifts.json()
-      loadAuditLogs()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось удалить подарок"
+        body: JSON.stringify({ initData: getInitData(), gift_id: id })
+      });
+      if (res.ok) {
+        const resGifts = await fetch(`${window.API_BASE}/api/admin/gifts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initData: getInitData() })
+        });
+        gifts.value = await resGifts.json();
+        loadAuditLogs();
+        window.Telegram.WebApp.showAlert("✅ Подарок удален из каталога");
+      }
+    } catch (e) {
+      window.Telegram.WebApp.showAlert("❌ Ошибка соединения");
+    } finally {
+      loading.value = false;
     }
-  } catch (e) {
-    errorMessage.value = "Ошибка подключения"
-  } finally {
-    loading.value = false
-  }
-}
-
+  });
+};
 const loadAuditLogs = async () => {
   try {
     const res = await fetch(`${window.API_BASE}/api/admin/audit`, {
@@ -1006,35 +910,31 @@ const loadAuditLogs = async () => {
 }
 
 const sendBroadcast = async () => {
-  clearError()
-  loading.value = true
+  clearError();
+  if (!broadcast.value.title.trim() || !broadcast.value.message.trim()) return;
+  
+  loading.value = true;
   try {
-    const payload = {
-      initData: getInitData(),
-      title: broadcast.value.title,
-      message: broadcast.value.message,
-      link: broadcast.value.link,
-      image_url: broadcast.value.image_url
-    }
-
     const res = await fetch(`${window.API_BASE}/api/admin/broadcast`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
+      body: JSON.stringify({ initData: getInitData(), ...broadcast.value })
+    });
 
     if (res.ok) {
-      broadcastResult.value = await res.json()
+      const result = await res.json();
+      window.Telegram.WebApp.showAlert(`📢 Рассылка запущена!\nПолучателей: ${result.total_targets}\nРезультат появится в аудите после завершения.`);
+      broadcast.value = { title: '', message: '', link: '', image_url: '' };
     } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Ошибка отправки рассылки"
+      const err = await res.json();
+      window.Telegram.WebApp.showAlert("❌ " + (err.detail || "Ошибка рассылки"));
     }
   } catch (e) {
-    errorMessage.value = "Ошибка подключения"
+    window.Telegram.WebApp.showAlert("❌ Ошибка соединения");
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 </script>
 
 <style scoped>
