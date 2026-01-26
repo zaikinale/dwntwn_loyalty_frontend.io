@@ -252,6 +252,10 @@
 }
 
 .gift-details {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
   padding: 8px 4px;
 }
 
@@ -269,8 +273,6 @@
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 800;
-  display: inline-flex;
-  gap: 3px;
   display: flex;
   align-items: center;
   gap: 2px;
