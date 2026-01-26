@@ -39,7 +39,7 @@
   <div v-if="nextLevelInfo" class="level-progress-container">
     <div class="level-text-wrapper">
       <span class="next-level-label">До уровня {{ nextLevelInfo.next }}</span>
-      <span class="points-left">еще {{ nextLevelInfo.remaining }} ⚡️</span>
+      <span class="points-left">еще {{ nextLevelInfo.remaining }} баллов</span>
     </div>
   
     <div class="progress-track">
@@ -345,7 +345,7 @@ const nextLevelInfo = computed(() => {
 
 .level-progress-container {
   margin-top: 16px;
-  padding: 8px 0;
+  padding: 15px 0;
 }
 
 .level-text-wrapper {
