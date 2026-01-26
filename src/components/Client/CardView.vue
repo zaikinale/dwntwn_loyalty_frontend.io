@@ -74,6 +74,24 @@
       </div>
     </transition>
   </div>
+  <button class="info-toggle-btn" @click="showCardInfo = !showCardInfo">
+      {{ showCardInfo ? '← Скрыть' : 'Информация →' }}
+    </button>
+
+    <div v-show="showCardInfo" class="card-info">
+      <div class="info-row">
+        <span class="label">Уровень:</span>
+        <span class="value" :class="`level-${profile.level.toLowerCase()}`">{{ profile.level }}</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Баланс:</span>
+        <span class="value">{{ profile.points }} баллов</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Заработано всего:</span>
+        <span class="value">{{ profile.total_earned_points }} баллов</span>
+      </div>
+    </div>
 </div>
 
   <div v-if="nextLevelInfo" class="level-progress-container">
@@ -467,14 +485,12 @@ const nextLevelInfo = computed(() => {
 }
 .bank-card:active { transform: scale(0.97); }
 
-/* Цвета Металлов */
 .level-iron { background: linear-gradient(135deg, #3e4145 0%, #1c1e22 100%); }
 .level-bronze { background: linear-gradient(135deg, #a87932 0%, #5e3a11 100%); }
 .level-silver { background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%); }
 .level-gold { background: linear-gradient(135deg, #f1c40f 0%, #967206 100%); }
 .level-platina { background: linear-gradient(135deg, #e5e4e2 0%, #7f8c8d 100%); }
 
-/* Элементы Карты */
 .card-chip {
   width: 42px; height: 32px;
   background: linear-gradient(135deg, #f0d78c, #8c7012);
@@ -484,10 +500,8 @@ const nextLevelInfo = computed(() => {
 .level-badge { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
 .card-number { font-family: 'Courier New', monospace; font-size: 1.2rem; letter-spacing: 2px; }
 .card-label { display: block; font-size: 9px; text-transform: uppercase; opacity: 0.6; margin-bottom: 2px; }
-.name { font-weight: 600; font-size: 15px; }
-.points { font-weight: bold; font-size: 1.2rem; }
+.name, .points { font-weight: 600; font-size: 12px; }
 
-/* QR Оверлей */
 .qr-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   background: rgba(0,0,0,0.85); backdrop-filter: blur(6px);
@@ -496,7 +510,6 @@ const nextLevelInfo = computed(() => {
 .qr-white-box { background: white; padding: 15px; border-radius: 15px; text-align: center; }
 .qr-tap-hint { color: #000; font-size: 10px; margin-top: 8px; font-weight: bold; text-transform: uppercase; }
 
-/* Блок прогресса */
 .progress-block { margin-top: -5px !important; }
 .progress-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
 .progress-title h3 { margin: 0 !important; font-size: 14px !important; }
