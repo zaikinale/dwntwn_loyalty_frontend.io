@@ -84,13 +84,13 @@
           <div>{{ t.description }}</div>
           <div class="timestamp">{{ formatDateTime(t.created_at) }}</div>
         </div>
-        <button 
+        <!-- <button 
           v-if="!t.description.includes('Отмена')" 
           @click="cancelTx(t.id)" 
           style="background: #331111; color: #ff4444; border: 1px solid #552222; padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 12px;"
         >
           Отменить
-        </button>
+        </button> -->
       </div>
     </div>
   </div>
@@ -343,7 +343,8 @@ onBeforeUnmount(() => stopHtml5QrScanner())
   margin-bottom: 16px;
   flex-wrap: wrap;
 }
-.search-btn, .search-box input {
+
+.search-btn, .search-box input, .expandable-btn {
   padding: 10px;
   border-radius: 6px;
   background: #222;
@@ -354,7 +355,10 @@ onBeforeUnmount(() => stopHtml5QrScanner())
 
 .search-box input  {
   flex: 1;
-  min-width: 180px;
+}
+.search-btn {
+  width: 100%;
+  margin-bottom: 16px;
 }
 
 .btn-scan {

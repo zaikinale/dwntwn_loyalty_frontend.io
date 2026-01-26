@@ -291,10 +291,10 @@ const nextLevelInfo = computed(() => {
   justify-content: center;
 }
 
-.gift-image { width: 100%; height: 100%; object-fit: cover; }
+.gift-image { width: 120px; height: 120px; object-fit: cover; }
 .gift-placeholder { 
-  min-width: 100%; 
-  min-height: 100%; 
+  width: 120px; 
+  height: 120px;
   display: flex;
   justify-content: center;
   align-items: center;
