@@ -2,7 +2,7 @@
   <div v-if="isAnniversary" class="anniversary-banner">
     🎉 Сегодня ваша годовщина в программе лояльности!
   </div>
-  <div class="card glass">
+  <!-- <div class="card glass">
     <h3>Ваша карта</h3>
     <div class="qr-container">
       <div class="qr-wrapper">
@@ -34,7 +34,47 @@
         <span class="value">{{ profile.total_earned_points }} баллов</span>
       </div>
     </div>
+  </div> -->
+
+  <div class="card-visual-container">
+  <div 
+    :class="['bank-card', `level-${profile.level.toLowerCase()}`]" 
+    @click="showFullQR = !showFullQR"
+  >
+    <div class="card-chip"></div>
+    <div class="card-top">
+      <span class="brand">LOYALTY PASS</span>
+      <div class="level-badge">{{ profile.level }}</div>
+    </div>
+    
+    <div class="card-number">{{ profile.card_number || '•••• •••• •••• ••••' }}</div>
+
+    <div class="card-footer">
+      <div class="holder">
+        <span class="card-label">Владелец</span>
+        <span class="name">{{ profile.first_name || 'КЛИЕНТ' }}</span>
+      </div>
+      <div class="balance">
+        <span class="card-label">Доступно</span>
+        <span class="points">{{ profile.points }} ✨</span>
+      </div>
+    </div>
+
+    <transition name="fade">
+      <div v-if="showFullQR" class="qr-overlay">
+        <div class="qr-white-box">
+          <qrcode-vue 
+            v-if="profile.card_number" 
+            :value="profile.card_number" 
+            :size="150" 
+            render-as="svg"
+          />
+          <p class="qr-tap-hint">Нажмите, чтобы скрыть</p>
+        </div>
+      </div>
+    </transition>
   </div>
+</div>
 
   <div v-if="nextLevelInfo" class="level-progress-container">
     <div class="level-text-wrapper">
@@ -345,7 +385,7 @@ const nextLevelInfo = computed(() => {
 
 .level-progress-container {
   margin-top: 16px;
-  padding: 15px 0;
+  padding: 15px;
 }
 
 .level-text-wrapper {
@@ -399,6 +439,75 @@ const nextLevelInfo = computed(() => {
 }
 
 @keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+/* Контейнер и Базовая Карта */
+.card-visual-container { padding: 16px 12px; }
+.bank-card {
+  height: 200px;
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  color: white;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.bank-card:active { transform: scale(0.97); }
+
+/* Цвета Металлов */
+.level-iron { background: linear-gradient(135deg, #3e4145 0%, #1c1e22 100%); }
+.level-bronze { background: linear-gradient(135deg, #a87932 0%, #5e3a11 100%); }
+.level-silver { background: linear-gradient(135deg, #bdc3c7 0%, #2c3e50 100%); }
+.level-gold { background: linear-gradient(135deg, #f1c40f 0%, #967206 100%); }
+.level-platina { background: linear-gradient(135deg, #e5e4e2 0%, #7f8c8d 100%); }
+
+/* Элементы Карты */
+.card-chip {
+  width: 42px; height: 32px;
+  background: linear-gradient(135deg, #f0d78c, #8c7012);
+  border-radius: 6px;
+}
+.brand { font-weight: 900; letter-spacing: 1px; font-size: 12px; opacity: 0.8; }
+.level-badge { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+.card-number { font-family: 'Courier New', monospace; font-size: 1.2rem; letter-spacing: 2px; }
+.card-label { display: block; font-size: 9px; text-transform: uppercase; opacity: 0.6; margin-bottom: 2px; }
+.name { font-weight: 600; font-size: 15px; }
+.points { font-weight: bold; font-size: 1.2rem; }
+
+/* QR Оверлей */
+.qr-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.85); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center; z-index: 10;
+}
+.qr-white-box { background: white; padding: 15px; border-radius: 15px; text-align: center; }
+.qr-tap-hint { color: #000; font-size: 10px; margin-top: 8px; font-weight: bold; text-transform: uppercase; }
+
+/* Блок прогресса */
+.progress-block { margin-top: -5px !important; }
+.progress-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.progress-title h3 { margin: 0 !important; font-size: 14px !important; }
+.total-earned { font-size: 11px; opacity: 0.5; margin: 2px 0 0 0; }
+.points-needed { color: #4dabf7; font-weight: bold; font-size: 13px; }
+.progress-track { height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #4dabf7, #74c0fc); position: relative; transition: width 0.8s ease; }
+
+/* Анимации */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.shimmer {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  animation: shimmer-anim 2s infinite;
+}
+@keyframes shimmer-anim {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(100%); }
 }
