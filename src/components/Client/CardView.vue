@@ -71,7 +71,7 @@
     <div class="card-head">
       <h3>История операций</h3> 
 
-      <button class="history-toggle-btn" @click="showHistoryInfo = !showHistoryInfo">
+      <button v-if="transactions.length !== 0" class="history-toggle-btn" @click="showHistoryInfo = !showHistoryInfo">
         {{ showHistoryInfo ? '←' : '→' }}
       </button>
     </div>
