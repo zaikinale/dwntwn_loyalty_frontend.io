@@ -41,14 +41,13 @@
     :class="['bank-card', `level-${profile.level.toLowerCase()}`]" 
     @click="showFullQR = !showFullQR"
   >
-    <div class="card-chip"></div>
+    <div class="chip-level"> 
+      <div class="card-chip"></div>
+      <span class="level-badge">{{ profile.level }}</span></div>
     <div class="card-top">
-      <span class="brand">LOYALTY PASS</span>
-      <div class="level-badge">{{ profile.level }}</div>
+      <span class="brand">Показать Qr-code</span>
     </div>
     
-    <div class="card-number">{{ profile.card_number || '•••• •••• •••• ••••' }}</div>
-
     <div class="card-footer">
       <div class="holder">
         <span class="card-label">Владелец</span>
@@ -56,9 +55,10 @@
       </div>
       <div class="balance">
         <span class="card-label">Доступно</span>
-        <span class="points">{{ profile.points }} ✨</span>
+        <span class="points">{{ profile.points }} баллов</span>
       </div>
     </div>
+    <div class="card-number">{{ profile.card_number || '•••• •••• •••• ••••' }}</div>
 
     <transition name="fade">
       <div v-if="showFullQR" class="qr-overlay">
@@ -374,6 +374,12 @@ const nextLevelInfo = computed(() => {
   text-align: center;
   border-radius: 6px;
   transition: background 0.2s;
+}
+
+.chip-level, .balance, .holder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .info-toggle-btn {
