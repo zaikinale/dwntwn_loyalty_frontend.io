@@ -199,7 +199,7 @@
     -webkit-backdrop-filter: blur(15px) !important;
     border: 1px solid rgba(255, 255, 255, 0.1) !important;
     border-radius: 16px;
-    margin: clamp(10px, 3vw, 20px);
+    margin-bottom: clamp(10px, 3vw, 20px);
     padding: clamp(15px, 5vw, 25px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
