@@ -901,7 +901,7 @@ const deleteGift = async (id) => {
         body: JSON.stringify({ initData: getInitData(), gift_id: id })
       });
       if (res.ok) {
-        const resGifts = await fetch(`${window.API_BASE}/api/admin/gifts`, {
+        const resGifts = await fetch(`${window.API_BASE}/api/admin/gifts/delete`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ initData: getInitData() })
