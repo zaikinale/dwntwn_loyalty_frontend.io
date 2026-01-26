@@ -518,9 +518,14 @@ const nextLevelInfo = computed(() => {
 .progress-track { height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; }
 .progress-fill { height: 100%; background: linear-gradient(90deg, #4dabf7, #74c0fc); position: relative; transition: width 0.8s ease; }
 
-/* Анимации */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
 
 .shimmer {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
