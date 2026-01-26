@@ -204,6 +204,10 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   }
 
+  .tab {
+    margin: clamp(10px, 3vw, 20px);
+  }
+
   .card:last-child {
     margin-bottom: 60px;
   }
