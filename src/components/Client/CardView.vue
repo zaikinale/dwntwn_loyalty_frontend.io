@@ -151,6 +151,7 @@
 import { computed, ref } from 'vue'
 import QrcodeVue from 'qrcode.vue'
 
+const showFullQR = ref(false)
 const showCardInfo = ref(false)
 const showHistoryInfo = ref(false)
 
