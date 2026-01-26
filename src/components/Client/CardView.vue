@@ -35,6 +35,23 @@
       </div>
     </div>
   </div>
+
+  <div v-if="nextLevelInfo" class="level-progress-container">
+    <div class="level-text-wrapper">
+      <span class="next-level-label">До уровня {{ nextLevelInfo.next }}</span>
+      <span class="points-left">еще {{ nextLevelInfo.remaining }} ⚡️</span>
+    </div>
+  
+    <div class="progress-track">
+      <div 
+        class="progress-fill" 
+        :style="{ width: nextLevelInfo.progress + '%' }"
+      >
+        <div class="progress-glow"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="card glass">
     <h3>Подарки за баллы</h3>
     <div v-if="gifts.length === 0" class="empty">Подарков пока нет 🙁</div>
@@ -113,6 +130,35 @@ const formatDateTime = (isoStr) => {
 const onImageError = (event) => {
   event.target.style.display = 'none'
 }
+
+const nextLevelInfo = computed(() => {
+  const points = props.profile.total_earned_points;
+  
+  const levels = [
+    { name: "IRON", min: 0 },
+    { name: "BRONZE", min: 100 },
+    { name: "SILVER", min: 300 },
+    { name: "GOLD", min: 500 },
+    { name: "PLATINA", min: 1000 }
+  ];
+
+  for (let i = 0; i < levels.length - 1; i++) {
+    if (points < levels[i + 1].min) {
+      const currentRangeMin = levels[i].min;
+      const nextRangeMin = levels[i + 1].min;
+      
+      const progress = ((points - currentRangeMin) / (nextRangeMin - currentRangeMin)) * 100;
+      
+      return {
+        next: levels[i + 1].name,
+        remaining: nextRangeMin - points,
+        progress: Math.min(Math.max(progress, 0), 100) 
+      };
+    }
+  }
+  return null;
+});
+
 </script>
 
 <style scoped>
@@ -295,5 +341,65 @@ const onImageError = (event) => {
 
 .info-toggle-btn:hover, .history-toggle-btn:hover {
   color: #1a8cff;
+}
+
+.level-progress-container {
+  margin-top: 16px;
+  padding: 8px 0;
+}
+
+.level-text-wrapper {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.next-level-label {
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.points-left {
+  color: #4dabf7;
+  font-weight: bold;
+}
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4dabf7, #74c0fc);
+  border-radius: 10px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.progress-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 </style>
