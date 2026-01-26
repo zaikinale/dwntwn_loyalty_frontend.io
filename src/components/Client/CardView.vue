@@ -75,7 +75,7 @@
     </transition>
   </div>
   <button class="info-toggle-btn" @click="showCardInfo = !showCardInfo">
-      {{ showCardInfo ? '← Скрыть' : 'Информация →' }}
+      {{ showCardInfo ? '↑ Скрыть' : 'Информация ↓' }}
     </button>
 
     <div v-show="showCardInfo" class="card-info">
@@ -147,7 +147,7 @@
       <h3>История операций</h3> 
 
       <button v-if="transactions.length !== 0" class="history-toggle-btn" @click="showHistoryInfo = !showHistoryInfo">
-        {{ showHistoryInfo ? '←' : '→' }}
+        {{ showHistoryInfo ? '↑' : '↓' }}
       </button>
     </div>
     <div v-if="transactions.length === 0" class="empty">Нет операций</div>
