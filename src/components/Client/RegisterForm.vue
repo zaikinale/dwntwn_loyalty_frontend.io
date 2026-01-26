@@ -100,7 +100,7 @@
       
       { type: 'h4', text: '2. Начисление бонусов' },
       { type: 'p', text: 'Бонусы начисляются в зависимости от уровня карты: PLATINA (10%), GOLD (7%), SILVER (5%), BRONZE (3%), IRON (1%).' },
-      { type: 'p', text: 'Бонусы округляются в меньшую сторону. Бонусы не являются денежными средствами.' },
+      { type: 'p', text: 'Бонусы округляются в меньшую сторону до целого числа. Бонусы не являются денежными средствами.' },
       
       { type: 'h4', text: '3. Обмен бонусов' },
       { type: 'p', text: 'Обмен возможен только на подарки из каталога. После обмена бонусы списываются безвозвратно.' },
@@ -151,8 +151,8 @@
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     
     return f.lastName.trim() && f.firstName.trim() && 
-           phoneClean.length === 11 && emailRegex.test(f.email) &&
-           f.birthDate && f.gender
+          phoneClean.length === 11 && emailRegex.test(f.email) &&
+          f.birthDate && f.gender
   })
   
   const submit = async () => {

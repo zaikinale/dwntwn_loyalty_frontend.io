@@ -264,13 +264,16 @@
 }
 
 .gift-price-tag {
-  color: black;
+  color: white;
   padding: 2px 10px;
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 800;
   display: inline-flex;
   gap: 3px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .price-label {
