@@ -306,9 +306,9 @@ const nextLevelInfo = computed(() => {
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 24px;
-  background: rgba(0,0,0,0.3);
-  width: 100%;
-  height: 100%;
+  background: rgba(0,0,0,0.3); 
+  width: 120px; 
+  height: 120px;
   display: flex;
   align-items: center;
   justify-content: center;

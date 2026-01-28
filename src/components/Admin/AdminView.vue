@@ -1083,7 +1083,6 @@ const sendBroadcast = async () => {
 
 .search-box input  {
   flex: 1;
-  /* min-width: 160px; */
 }
 .search-btn {
   width: 100%;
