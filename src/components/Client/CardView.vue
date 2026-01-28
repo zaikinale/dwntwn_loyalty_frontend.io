@@ -280,7 +280,8 @@ const nextLevelInfo = computed(() => {
 
 .gift-image-wrapper {
   position: relative;
-  width: 100%;
+  width: 120px; 
+  height: 120px;
   aspect-ratio: 1;
   background: rgba(0,0,0,0.2);
   border-radius: 10px;
