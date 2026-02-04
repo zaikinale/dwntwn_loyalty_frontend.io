@@ -893,30 +893,39 @@ const addGift = async () => {
 const deleteGift = async (id) => {
   window.Telegram.WebApp.showConfirm("Удалить подарок? Это действие нельзя отменить.", async (confirmed) => {
     if (!confirmed) return;
+    
     loading.value = true;
     try {
       const res = await fetch(`${window.API_BASE}/api/admin/delete-gift`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData(), gift_id: id })
+        body: JSON.stringify({ 
+          initData: getInitData(), 
+          id: id 
+        })
       });
+
       if (res.ok) {
-        const resGifts = await fetch(`${window.API_BASE}/api/admin/gifts/delete`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ initData: getInitData() })
-        });
-        gifts.value = await resGifts.json();
-        loadAuditLogs();
-        window.Telegram.WebApp.showAlert("✅ Подарок удален из каталога");
+        gifts.value = gifts.value.filter(g => g.id !== id);
+        
+        if (typeof loadAuditLogs === 'function') {
+          await loadAuditLogs();
+        }
+        
+        window.Telegram.WebApp.showAlert("✅ Подарок успешно удален");
+      } else {
+        const errorData = await res.json();
+        window.Telegram.WebApp.showAlert(`❌ Ошибка: ${errorData.detail || 'Не удалось удалить'}`);
       }
     } catch (e) {
+      console.error(e);
       window.Telegram.WebApp.showAlert("❌ Ошибка соединения");
     } finally {
       loading.value = false;
     }
   });
 };
+
 const loadAuditLogs = async () => {
   try {
     const res = await fetch(`${window.API_BASE}/api/admin/audit`, {
