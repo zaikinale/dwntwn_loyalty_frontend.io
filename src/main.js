@@ -1,18 +1,15 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 
-// === ИНИЦИАЛИЗАЦИЯ TELEGRAM WEBAPP (КРИТИЧЕСКИ ВАЖНО) ===
 const tg = window.Telegram?.WebApp
 
 if (tg) {
-  tg.ready()           // Разблокирует клики, фокус, клавиатуру
-  tg.expand()          // Включает прокрутку
-  tg.disableVerticalSwipes() // Отключает свайп закрытия (опционально)
-  tg.setBackgroundColor('#111') // Подстройка под тёмную тему
+  tg.ready()          
+  tg.expand()         
+  tg.disableVerticalSwipes() 
+  tg.setBackgroundColor('#111')
 }
 
-// === ГЛОБАЛЬНЫЕ НАСТРОЙКИ ===
-window.API_BASE = "https://back-dwntwn-io.onrender.com"
+window.API_BASE = "https://dwntwncoffee.ru"
 
-// === ЗАПУСК ПРИЛОЖЕНИЯ ===
 createApp(App).mount('#app')
