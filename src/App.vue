@@ -59,7 +59,7 @@ import NewsView from './components/Client/NewsView.vue'
 import InfoView from './components/Client/InfoView.vue'
 import StaffView from './components/Staff/StaffView.vue'
 import AdminView from './components/Admin/AdminView.vue'
-
+import { clientPost, staffPost } from '@/api/authApi'
 const userRole = ref(null)
 const isRegistered = ref(false)
 const profile = ref(null)
@@ -121,47 +121,22 @@ const getInitData = () => {
 
 const loadProfile = async () => {
   try {
-    const res = await fetch(`${window.API_BASE}/api/client/profile`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: getInitData() })
-    })
-    if (res.ok) {
-      profile.value = await res.json()
-      isRegistered.value = true
+    const [profileData, giftsData, txData, notifications] = await Promise.all([
+      clientPost('profile', {}),
+      clientPost('gifts', {}),
+      clientPost('transactions', {}),
+      clientPost('user-notifications', {}),
+    ])
 
-      // Загрузка подарков
-      const giftsRes = await fetch(`${window.API_BASE}/api/client/gifts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      gifts.value = await giftsRes.json()
+    profile.value = profileData
+    gifts.value = giftsData
+    transactions.value = txData
+    isRegistered.value = true
 
-      // Загрузка истории операций ← НОВОЕ
-      const txRes = await fetch(`${window.API_BASE}/api/client/transactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      transactions.value = await txRes.json()
-
-      // Загрузка уведомлений
-      const notifRes = await fetch(`${window.API_BASE}/api/client/user-notifications`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      if (notifRes.ok) {
-        const notifications = await notifRes.json()
-        const unread = notifications.filter(n => !n.is_read)
-        if (unread.length > 0) {
-          const first = unread[0]
-          alert(`🔔 ${first.title}\n\n${first.message}`)
-        }
-      }
-    } else {
-      isRegistered.value = false
+    const unread = (notifications || []).filter(n => !n.is_read)
+    if (unread.length > 0) {
+      const first = unread[0]
+      alert(`🔔 ${first.title}\n\n${first.message}`)
     }
   } catch (e) {
     console.error(e)
@@ -171,19 +146,9 @@ const loadProfile = async () => {
 
 const authorizeStaff = async () => {
   try {
-    const res = await fetch(`${window.API_BASE}/api/staff/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: getInitData() })
-    })
-    if (res.ok) {
-      const staff = await res.json()
-      userRole.value = staff.role
-      staffId.value = staff.id
-    } else {
-      userRole.value = 'client'
-      loadProfile()
-    }
+    const staff = await staffPost('login', {})
+    userRole.value = staff.role
+    staffId.value = staff.id
   } catch (e) {
     userRole.value = 'client'
     loadProfile()

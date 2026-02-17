@@ -84,6 +84,7 @@
 
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { clientPost, staffPost } from '@/api/authApi'
 
 const props = defineProps({
   staffId: { type: Number, required: true }
@@ -101,10 +102,6 @@ const errorMessage = ref('')
 const isScanning = ref(false)
 const qrScanner = ref(null)
 
-const getInitData = () => {
-  return window.Telegram?.WebApp?.initData || ''
-}
-
 const formatDateTime = (isoStr) => {
   return new Date(isoStr).toLocaleString('ru-RU')
 }
@@ -112,21 +109,13 @@ const formatDateTime = (isoStr) => {
 onMounted(async () => {
   window.Telegram?.WebApp?.ready?.()
   try {
-    const [giftsRes, historyRes] = await Promise.all([
-      fetch(`${window.API_BASE}/api/client/gifts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      }),
-      fetch(`${window.API_BASE}/api/staff/my-transactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
+    const [giftsData, historyData] = await Promise.all([
+      clientPost('gifts', {}),
+      staffPost('my-transactions', {}),
     ])
 
-    gifts.value = await giftsRes.json()
-    myTransactions.value = historyRes.ok ? await historyRes.json() : []
+    gifts.value = giftsData
+    myTransactions.value = historyData || []
   } catch (e) {
     errorMessage.value = "Ошибка загрузки данных"
     console.error(e)
@@ -139,18 +128,11 @@ const searchClient = async () => {
   if (!q) return
 
   try {
-    const payload = { initData: getInitData(), [q.match(/^\d+$/) ? 'phone' : 'card_number']: q }
-    const url = q.match(/^\d+$/) 
-      ? `${window.API_BASE}/api/staff/client-by-phone`
-      : `${window.API_BASE}/api/staff/client-by-card`
+    const isPhone = q.match(/^\d+$/)
+    const payload = { [isPhone ? 'phone' : 'card_number']: q }
+    const path = isPhone ? 'client-by-phone' : 'client-by-card'
 
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-
-    client.value = res.ok ? await res.json() : null
+    client.value = await staffPost(path, payload)
     if (!client.value) {
       errorMessage.value = "Клиент не найден"
     }
@@ -256,29 +238,14 @@ const addPoints = async () => {
 
   loading.value = true
   try {
-    const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        client_id: client.value.id,
-        purchase_amount: purchaseAmount.value
-      })
+    await staffPost('add-points', {
+      client_id: client.value.id,
+      purchase_amount: purchaseAmount.value,
     })
 
-    if (res.ok) {
-      await searchClient()
-      purchaseAmount.value = 0
-      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      myTransactions.value = await histRes.json()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Ошибка начисления"
-    }
+    await searchClient()
+    purchaseAmount.value = 0
+    myTransactions.value = await staffPost('my-transactions', {})
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   } finally {
@@ -293,29 +260,14 @@ const redeemGift = async () => {
 
   loading.value = true
   try {
-    const res = await fetch(`${window.API_BASE}/api/staff/redeem-gift`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        client_id: client.value.id,
-        gift_id: selectedGift.value
-      })
+    await staffPost('redeem-gift', {
+      client_id: client.value.id,
+      gift_id: selectedGift.value,
     })
 
-    if (res.ok) {
-      await searchClient()
-      selectedGift.value = ''
-      const histRes = await fetch(`${window.API_BASE}/api/staff/my-transactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      myTransactions.value = await histRes.json()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Ошибка выдачи"
-    }
+    await searchClient()
+    selectedGift.value = ''
+    myTransactions.value = await staffPost('my-transactions', {})
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   } finally {

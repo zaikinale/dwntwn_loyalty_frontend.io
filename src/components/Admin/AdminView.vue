@@ -317,6 +317,7 @@
 
 <script setup>
 import { ref, onBeforeUnmount, onMounted } from 'vue'
+import { adminPost, staffPost, clientPost } from '@/api/authApi'
 
 const isScanning = ref(false)
 const qrScanner = ref(null) // будет содержать экземпляр сканера
@@ -354,10 +355,6 @@ const broadcast = ref({
 })
 const broadcastResult = ref(null)
 
-const getInitData = () => {
-  return window.Telegram?.WebApp?.initData || ''
-}
-
 const formatDateTime = (isoStr) => {
   return new Date(isoStr).toLocaleString('ru-RU')
 }
@@ -383,20 +380,12 @@ const switchTab = (tab) => {
 onMounted(async () => {
   clearError()
   try {
-    const [resTx, resGifts] = await Promise.all([
-      fetch(`${window.API_BASE}/api/admin/transactions`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      }),
-      fetch(`${window.API_BASE}/api/admin/gifts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
+    const [tx, giftsData] = await Promise.all([
+      adminPost('transactions', {}),
+      adminPost('gifts', {}),
     ])
-    transactions.value = await resTx.json()
-    gifts.value = await resGifts.json()
+    transactions.value = tx
+    gifts.value = giftsData
     await loadGiftsForRedeem()
   } catch (e) {
     errorMessage.value = "Ошибка загрузки данных"
@@ -404,15 +393,7 @@ onMounted(async () => {
 })
 const loadCurrentNotifications = async () => {
   try {
-    const res = await fetch(`${window.API_BASE}/api/admin/all-notifications`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: getInitData() })
-    })
-    if (!res.ok) {
-      throw new Error(`HTTP ${res.status}: ${await res.text()}`)
-    }
-    const data = await res.json()
+    const data = await adminPost('all-notifications', {})
     currentNotifications.value = {
       announcement: data.find(n => n.type === 'announcement') || null,
       novelty: data.filter(n => n.type === 'novelty'),
@@ -427,50 +408,27 @@ const loadCurrentNotifications = async () => {
 const deleteNotification = async (id) => {
   if (!confirm("Удалить уведомление? Это действие нельзя отменить.")) return
   try {
-    const res = await fetch(`${window.API_BASE}/api/admin/delete-notification`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: getInitData(), notification_id: id })
-    })
-    if (res.ok) {
-      // Обновляем список
-      await loadCurrentNotifications()
-      // Обновляем аудит
-      loadAuditLogs()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось удалить"
-    }
+    await adminPost('delete-notification', { notification_id: id })
+    // Обновляем список и аудит
+    await loadCurrentNotifications()
+    loadAuditLogs()
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   }
 }
 
 const loadGiftsForRedeem = async () => {
-  const res = await fetch(`${window.API_BASE}/api/client/gifts`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ initData: getInitData() })
-  })
-  giftsForRedeem.value = await res.json()
+  giftsForRedeem.value = await clientPost('gifts', {})
 }
 
 const loadStaffAndClients = async () => {
   try {
     const [staffRes, clientRes] = await Promise.all([
-      fetch(`${window.API_BASE}/api/admin/staff-list`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      }),
-      fetch(`${window.API_BASE}/api/admin/clients`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
+      adminPost('staff-list', {}),
+      adminPost('clients', {}),
     ])
-    staffList.value = await staffRes.json()
-    clientList.value = await clientRes.json()
+    staffList.value = staffRes
+    clientList.value = clientRes
   } catch (e) {
     errorMessage.value = "Ошибка загрузки персонала"
   }
@@ -481,17 +439,10 @@ const searchClient = async () => {
   const q = searchQuery.value.trim()
   if (!q) return
   try {
-    const payload = { initData: getInitData(), [q.match(/^\d+$/) ? 'phone' : 'card_number']: q }
-    const url = q.match(/^\d+$/) 
-      ? `${window.API_BASE}/api/staff/client-by-phone`
-      : `${window.API_BASE}/api/staff/client-by-card`
-
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    client.value = res.ok ? await res.json() : null
+    const isPhone = q.match(/^\d+$/)
+    const payload = { [isPhone ? 'phone' : 'card_number']: q }
+    const path = isPhone ? 'client-by-phone' : 'client-by-card'
+    client.value = await staffPost(path, payload)
     if (!client.value) {
       errorMessage.value = "Клиент не найден"
     }
@@ -609,22 +560,12 @@ const addPoints = async () => {
   }
   loading.value = true
   try {
-    const res = await fetch(`${window.API_BASE}/api/staff/add-points`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        client_id: client.value.id,
-        purchase_amount: purchaseAmount.value
-      })
+    await staffPost('add-points', {
+      client_id: client.value.id,
+      purchase_amount: purchaseAmount.value,
     })
-    if (res.ok) {
-      await searchClient()
-      purchaseAmount.value = 0
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось начислить баллы"
-    }
+    await searchClient()
+    purchaseAmount.value = 0
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   } finally {
@@ -642,22 +583,12 @@ const redeemGift = async () => {
   if (!confirm(`Выдать "${gift?.name}" клиенту ${client.value.name}?`)) return
   loading.value = true
   try {
-    const res = await fetch(`${window.API_BASE}/api/staff/redeem-gift`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        client_id: client.value.id,
-        gift_id: selectedGift.value
-      })
+    await staffPost('redeem-gift', {
+      client_id: client.value.id,
+      gift_id: selectedGift.value,
     })
-    if (res.ok) {
-      await searchClient()
-      selectedGift.value = ''
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось выдать подарок"
-    }
+    await searchClient()
+    selectedGift.value = ''
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   } finally {
@@ -678,23 +609,13 @@ const addStaff = async () => {
   }
   loading.value = true
   try {
-    const res = await fetch(`${window.API_BASE}/api/admin/add-staff`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        telegram_id: newStaff.value.telegram_id,
-        name: newStaff.value.name,
-        role: newStaff.value.role
-      })
+    await adminPost('add-staff', {
+      telegram_id: newStaff.value.telegram_id,
+      name: newStaff.value.name,
+      role: newStaff.value.role,
     })
-    if (res.ok) {
-      newStaff.value = { telegram_id: null, name: '', role: 'staff' }
-      await loadStaffAndClients()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось добавить сотрудника"
-    }
+    newStaff.value = { telegram_id: null, name: '', role: 'staff' }
+    await loadStaffAndClients()
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   } finally {
@@ -706,20 +627,8 @@ const removeStaff = async (id) => {
   if (!confirm("Удалить сотрудника? Это действие нельзя отменить.")) return
   loading.value = true
   try {
-    const res = await fetch(`${window.API_BASE}/api/admin/delete-staff`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        staff_id: id
-      })
-    })
-    if (res.ok) {
-      await loadStaffAndClients()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось удалить сотрудника"
-    }
+    await adminPost('delete-staff', { staff_id: id })
+    await loadStaffAndClients()
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   } finally {
@@ -736,20 +645,11 @@ const addNotification = async () => {
   }
   loading.value = true
   try {
-    const payload = { initData: getInitData(), type, title, description, days_valid: days }
+    const payload: any = { type, title, description, days_valid: days }
     if (image_url) payload.image_url = image_url
-    const res = await fetch(`${window.API_BASE}/api/admin/create-notification`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    if (res.ok) {
-      newNotification.value = { type: 'promotion', title: '', description: '', image_url: '', days: 7 }
-      loadAuditLogs()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось создать уведомление"
-    }
+    await adminPost('create-notification', payload)
+    newNotification.value = { type: 'promotion', title: '', description: '', image_url: '', days: 7 }
+    loadAuditLogs()
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   } finally {
@@ -766,26 +666,12 @@ const addGift = async () => {
   }
   loading.value = true
   try {
-    const payload = { initData: getInitData(), name, points_cost: points }
+    const payload: any = { name, points_cost: points }
     if (image_url) payload.image_url = image_url
-    const res = await fetch(`${window.API_BASE}/api/admin/create-gift`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-    if (res.ok) {
-      newGift.value = { name: '', points: 0, image_url: '' }
-      const resGifts = await fetch(`${window.API_BASE}/api/admin/gifts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      gifts.value = await resGifts.json()
-      loadAuditLogs()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось добавить подарок"
-    }
+    await adminPost('create-gift', payload)
+    newGift.value = { name: '', points: 0, image_url: '' }
+    gifts.value = await adminPost('gifts', {})
+    loadAuditLogs()
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   } finally {
@@ -797,26 +683,9 @@ const deleteGift = async (id) => {
   if (!confirm("Удалить подарок? Это действие нельзя отменить.")) return
   loading.value = true
   try {
-    const res = await fetch(`${window.API_BASE}/api/admin/delete-gift`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        initData: getInitData(),
-        gift_id: id
-      })
-    })
-    if (res.ok) {
-      const resGifts = await fetch(`${window.API_BASE}/api/admin/gifts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ initData: getInitData() })
-      })
-      gifts.value = await resGifts.json()
-      loadAuditLogs()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Не удалось удалить подарок"
-    }
+    await adminPost('delete-gift', { gift_id: id })
+    gifts.value = await adminPost('gifts', {})
+    loadAuditLogs()
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   } finally {
@@ -826,14 +695,7 @@ const deleteGift = async (id) => {
 
 const loadAuditLogs = async () => {
   try {
-    const res = await fetch(`${window.API_BASE}/api/admin/audit`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ initData: getInitData() })
-    })
-    if (res.ok) {
-      auditLogs.value = await res.json()
-    }
+    auditLogs.value = await adminPost('audit', {})
   } catch (e) {
     console.error("Ошибка загрузки аудита:", e)
   }
@@ -844,25 +706,13 @@ const sendBroadcast = async () => {
   loading.value = true
   try {
     const payload = {
-      initData: getInitData(),
       title: broadcast.value.title,
       message: broadcast.value.message,
       link: broadcast.value.link,
-      image_url: broadcast.value.image_url // ← отправляем изображение
+      image_url: broadcast.value.image_url,
     }
 
-    const res = await fetch(`${window.API_BASE}/api/admin/broadcast`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-
-    if (res.ok) {
-      broadcastResult.value = await res.json()
-    } else {
-      const err = await res.json()
-      errorMessage.value = err.detail || "Ошибка отправки рассылки"
-    }
+    broadcastResult.value = await adminPost('broadcast', payload)
   } catch (e) {
     errorMessage.value = "Ошибка подключения"
   } finally {

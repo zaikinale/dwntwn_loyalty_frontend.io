@@ -39,6 +39,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { clientPost } from '@/api/authApi'
 
 const emit = defineEmits(['registered'])
 
@@ -103,7 +104,6 @@ const submit = async () => {
 
   try {
     const payload = {
-      initData,
       first_name: form.value.firstName,
       last_name: form.value.lastName,
       phone: form.value.phone || null,
@@ -112,21 +112,12 @@ const submit = async () => {
       gender: form.value.gender || null
     }
 
-    const res = await fetch(`${window.API_BASE}/api/client/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    })
-
-    if (res.ok) {
-      emit('registered')
-    } else {
-      const err = await res.json().catch(() => ({}))
-      alert("Ошибка регистрации: " + (err.detail || "Неизвестная ошибка"))
-    }
+    // initData будет автоматически добавлен в тело запроса внутри clientPost
+    await clientPost('register', payload)
+    emit('registered')
   } catch (e) {
     console.error("Registration error:", e)
-    alert("Ошибка подключения")
+    alert("Ошибка регистрации или подключения")
   } finally {
     loading.value = false
   }
